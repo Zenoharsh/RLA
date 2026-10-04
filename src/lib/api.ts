@@ -1,5 +1,10 @@
 const API_URL = "https://redlanternanalytica.com/wp-json/wp/v2";
 
+const defaultHeaders = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "application/json"
+};
+
 export interface WPPost {
   id: number;
   date: string;
@@ -45,6 +50,7 @@ export interface WPCategory {
 export async function fetchPosts(limit = 5): Promise<WPPost[]> {
   try {
     const res = await fetch(`${API_URL}/posts?per_page=${limit}&_embed`, {
+      headers: defaultHeaders,
       next: { revalidate: 3600 },
     });
     if (!res.ok) throw new Error("Failed to fetch posts");
@@ -58,6 +64,7 @@ export async function fetchPosts(limit = 5): Promise<WPPost[]> {
 export async function fetchCategories(): Promise<WPCategory[]> {
   try {
     const res = await fetch(`${API_URL}/categories?per_page=100`, {
+      headers: defaultHeaders,
       next: { revalidate: 86400 }, // Cache for a day
     });
     if (!res.ok) throw new Error("Failed to fetch categories");
@@ -90,6 +97,7 @@ export async function fetchPostsByCategory(slug: string, limit = 20): Promise<WP
     }
 
     const res = await fetch(`${API_URL}/posts?categories=${category.id}&per_page=${limit}&_embed`, {
+      headers: defaultHeaders,
       next: { revalidate: 3600 },
     });
     if (!res.ok) throw new Error("Failed to fetch category posts");
@@ -103,6 +111,7 @@ export async function fetchPostsByCategory(slug: string, limit = 20): Promise<WP
 export async function fetchPostBySlug(slug: string): Promise<WPPost | null> {
   try {
     const res = await fetch(`${API_URL}/posts?slug=${slug}&_embed`, {
+      headers: defaultHeaders,
       next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
@@ -117,6 +126,7 @@ export async function fetchPostBySlug(slug: string): Promise<WPPost | null> {
 export async function fetchPageBySlug(slug: string): Promise<WPPost | null> {
   try {
     const res = await fetch(`${API_URL}/pages?slug=${slug}&_embed`, {
+      headers: defaultHeaders,
       next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
@@ -131,6 +141,7 @@ export async function fetchPageBySlug(slug: string): Promise<WPPost | null> {
 export async function searchPosts(query: string, limit = 20): Promise<WPPost[]> {
   try {
     const res = await fetch(`${API_URL}/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed`, {
+      headers: defaultHeaders,
       cache: "no-store", // Search results shouldn't be cached aggressively
     });
     if (!res.ok) throw new Error("Failed to search posts");
@@ -187,6 +198,7 @@ export interface YouTubeVideo {
 export async function fetchYouTubeVideos(channelId: string, limit = 4): Promise<YouTubeVideo[]> {
   try {
     const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`, {
+      headers: defaultHeaders,
       next: { revalidate: 3600 }
     });
     
