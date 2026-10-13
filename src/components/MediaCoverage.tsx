@@ -71,7 +71,7 @@ export default function MediaCoverage({ posts }: Props) {
                         <span className="font-label-caps text-label-caps">{formatDate(post.date)}</span>
                       </div>
                       <h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-3">
-                        {post.title.rendered}
+                        {stripHtml(post.title.rendered)}
                       </h3>
                       <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-3 flex-1">
                         {stripHtml(post.excerpt.rendered)}

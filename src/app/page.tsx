@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import TrackerShelf from "@/components/TrackerShelf";
 import DynamicDossierSection from "@/components/DynamicDossierSection";
 import LiveTelemetryDashboard from "@/components/LiveTelemetryDashboard";
 import PictureCarousel from "@/components/PictureCarousel";
@@ -6,38 +7,71 @@ import MediaCoverage from "@/components/MediaCoverage";
 import LatestVideos from "@/components/LatestVideos";
 import EnrollmentForm from "@/components/EnrollmentForm";
 import Footer from "@/components/Footer";
-import { fetchPosts, fetchPostsByCategory } from "@/lib/api";
+import { fetchCategories, fetchPostsByCategory, fetchPostsPage, fetchTracker, formatDate, stripHtml } from "@/lib/api";
+import { TRACKERS } from "@/lib/site";
+
+// Short-form output goes to the feed; everything else is a long-form dossier.
+const SHORT_FORM = ["statements", "commentaries", "media-coverage", "opinions"];
+const EMPTY = { posts: [], total: 0, totalPages: 0 };
+const STAT_LABELS: Record<string, string> = { "nuclear-issues": "Nuclear", radicalisation: "Radicalisation", "media-coverage": "Media" };
 
 export default async function Home() {
-  // Fetch data in parallel for performance
-  const [allLatestPosts, mediaPosts] = await Promise.all([
-    fetchPosts(30),
-    fetchPostsByCategory("media-coverage", 6),
+  const categories = await fetchCategories();
+  const shortIds = categories.filter((c) => SHORT_FORM.includes(c.slug)).map((c) => c.id);
+
+  const [latest, dossiers, feed, mediaPosts, trackers] = await Promise.all([
+    fetchPostsPage({ perPage: 12 }),
+    // Secondary sections degrade gracefully if WordPress is slow
+    fetchPostsPage({ perPage: 6, exclude: shortIds }).catch(() => EMPTY),
+    fetchPostsPage({ perPage: 5, categories: shortIds }).catch(() => EMPTY),
+    fetchPostsByCategory("media-coverage", 6).catch(() => []),
+    Promise.all(
+      TRACKERS.map(async (t) => {
+        const tracker = await fetchTracker(t.slug).catch(() => null);
+        return tracker?.issues.length ? { ...tracker, short: t.short } : null;
+      })
+    ),
   ]);
 
-  // Semantically split the posts so Dossiers and Feed do not overlap
-  // Telemetry Feed gets short-form/rapid content
-  const feedCategories = ['brief', 'statement', 'digest', 'media-coverage'];
-  const feedPosts = allLatestPosts.filter(p => {
-    const terms = p._embedded?.["wp:term"]?.[0] || [];
-    return terms.some(t => feedCategories.some(fc => t.slug.includes(fc)));
-  }).slice(0, 5);
+  // Hero tags: the desks that published most recently, so they change as new content is posted
+  const tagMap = new Map<string, string>();
+  for (const post of latest.posts) {
+    for (const term of post._embedded?.["wp:term"]?.[0] ?? []) {
+      if (term.slug !== "uncategorized" && !tagMap.has(term.slug)) tagMap.set(term.slug, stripHtml(term.name));
+    }
+  }
+  const heroTags = [...tagMap].slice(0, 5).map(([slug, label]) => ({ label, href: `/${slug}` }));
 
-  // Dossiers get long-form content (everything else)
-  const dossierPosts = allLatestPosts.filter(p => !feedPosts.includes(p)).slice(0, 6);
+  const heroStats = Object.keys(STAT_LABELS)
+    .map((slug) => categories.find((c) => c.slug === slug))
+    .filter((c) => c && c.count > 0)
+    .map((c) => ({ label: STAT_LABELS[c!.slug], href: `/${c!.slug}`, count: c!.count }));
+
+  const lead = latest.posts[0];
+  const heroLatest = lead && {
+    title: stripHtml(lead.title.rendered),
+    href: `/article/${lead.slug}`,
+    date: formatDate(lead.date),
+    category: stripHtml(lead._embedded?.["wp:term"]?.[0]?.[0]?.name ?? ""),
+  };
+
+  const liveTrackers = trackers.filter((t) => t !== null);
 
   return (
     <main className="w-full bg-background">
       <div className="flex flex-col w-full">
 
         {/* SECTION 1: HERO */}
-        <HeroSection />
+        <HeroSection tags={heroTags} stats={heroStats} latest={heroLatest} />
 
-        {/* SECTION 2 & 3: INTERACTIVE FILTER & DOSSIERS */}
-        <DynamicDossierSection initialPosts={dossierPosts} />
+        {/* SECTION 2: MONTHLY TRACKERS — the magazines come first */}
+        <TrackerShelf trackers={liveTrackers} />
 
-        {/* SECTION 4: LIVE TELEMETRY (Short-form updates) */}
-        <LiveTelemetryDashboard posts={feedPosts} />
+        {/* SECTION 3: INTERACTIVE FILTER & DOSSIERS (long-form) */}
+        <DynamicDossierSection initialPosts={dossiers.posts.length ? dossiers.posts : latest.posts.slice(0, 6)} />
+
+        {/* SECTION 4: LATEST FEED (short-form) */}
+        <LiveTelemetryDashboard posts={feed.posts} categories={categories} totalAnalyses={latest.total} />
 
         {/* SECTION 5: PICTURE CAROUSEL (Replaces Quote Banner) */}
         <PictureCarousel />

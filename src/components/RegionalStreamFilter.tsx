@@ -51,7 +51,7 @@ export default function RegionalStreamFilter({ onCategoryChange }: RegionalStrea
           </div>
           <div className="hidden lg:flex items-center gap-2 pl-4 text-on-surface-variant font-label-caps text-label-caps min-w-max border-l border-outline/20 ml-2">
             <span className="material-symbols-outlined text-[15px] text-primary">filter_list</span>
-            <span>SORTED BY STRATEGIC WEIGHT</span>
+            <span>NEWEST FIRST</span>
           </div>
         </div>
       </div>

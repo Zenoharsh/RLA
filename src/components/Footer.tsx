@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TRACKERS } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -10,9 +11,11 @@ export default function Footer() {
           
           {/* Column 1: Brand & About (Spans 4 cols on large screens) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <Link href="/" className="inline-block w-48 hover:opacity-90 transition-opacity">
+            <Link href="/" className="inline-block w-56 hover:opacity-90 transition-opacity">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Red Lantern Analytica Logo" className="w-full h-auto object-contain transition-all" />
+              <img src="/logo-full.png" alt="Red Lantern Analytica" className="w-full h-auto object-contain dark:hidden" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-full-light.png" alt="Red Lantern Analytica" className="w-full h-auto object-contain hidden dark:block" />
             </Link>
             <p className="font-body-md text-on-surface-variant max-w-sm leading-relaxed">
               Independent diplomatic observatory, geopolitical intelligence synthesis, and technological conflict foresight for strategic councils.
@@ -21,13 +24,12 @@ export default function Footer() {
 
           {/* Column 2: RLA Briefs */}
           <div className="lg:col-span-3 flex flex-col gap-4">
-            <h4 className="font-title-md text-on-surface font-semibold tracking-wide uppercase m3-label-lg">Intelligence Briefs</h4>
+            <h4 className="font-title-md text-on-surface font-semibold tracking-wide uppercase m3-label-lg">RLA Briefs</h4>
             <ul className="flex flex-col gap-3">
-              <li><Link href="/indias-diplomatic-digest" className="font-body-md text-on-surface-variant hover:text-primary transition-colors">India's Diplomatic Digest</Link></li>
-              <li><Link href="/china-digest" className="font-body-md text-on-surface-variant hover:text-primary transition-colors">China Digest</Link></li>
-              <li><Link href="/tech-ai-digest" className="font-body-md text-on-surface-variant hover:text-primary transition-colors">Tech & AI Digest</Link></li>
+              {TRACKERS.slice(0, 5).map((t) => (
+                <li key={t.slug}><Link href={`/${t.slug}`} className="font-body-md text-on-surface-variant hover:text-primary transition-colors">{t.label}</Link></li>
+              ))}
               <li><Link href="/nuclear-issues" className="font-body-md text-on-surface-variant hover:text-primary transition-colors">Nuclear Issues</Link></li>
-              <li><Link href="/radicalisation" className="font-body-md text-on-surface-variant hover:text-primary transition-colors">Radicalisation</Link></li>
             </ul>
           </div>
 

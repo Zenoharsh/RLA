@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Hanken_Grotesk, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
-import { fetchCategories } from "@/lib/api";
+import HomeBeacon from "@/components/HomeBeacon";
 import "./globals.css";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -20,13 +20,11 @@ export const metadata: Metadata = {
   description: "Independent diplomatic observatory, geopolitical intelligence synthesis, and technological conflict foresight for strategic councils.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const categories = await fetchCategories();
-
   return (
     <html
       lang="en"
@@ -39,8 +37,9 @@ export default async function RootLayout({
       </head>
       <body className="bg-background text-on-surface font-body-md min-h-full flex flex-col pt-16 lg:pt-20">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar categories={categories} />
+          <Navbar />
           {children}
+          <HomeBeacon />
         </ThemeProvider>
       </body>
     </html>

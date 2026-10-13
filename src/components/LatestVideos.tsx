@@ -2,9 +2,9 @@ import React from "react";
 import Image from "next/image";
 import { fetchYouTubeVideos } from "@/lib/api";
 
-export default async function LatestVideos() {
+export default async function LatestVideos({ limit = 4, title = "Latest Videos" }: { limit?: number; title?: string }) {
   const channelId = "UCGgSZ7FE7jgUdpRNPQCzELQ"; // @RedLanternAnalytica
-  const videos = await fetchYouTubeVideos(channelId, 4);
+  const videos = await fetchYouTubeVideos(channelId, limit);
 
   if (!videos || videos.length === 0) return null;
 
@@ -15,7 +15,7 @@ export default async function LatestVideos() {
           <div className="flex items-center gap-4">
             <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shrink-0"></span>
             <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
-              Latest Videos
+              {title}
             </h2>
           </div>
           <a href="https://www.youtube.com/@RedLanternAnalytica" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors">
@@ -32,7 +32,7 @@ export default async function LatestVideos() {
                   src={video.thumbnail} 
                   alt={video.title} 
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="object-cover ken-burns"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 

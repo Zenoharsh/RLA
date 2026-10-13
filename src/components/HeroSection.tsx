@@ -5,7 +5,35 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function HeroSection() {
+export interface HeroTag {
+  label: string;
+  href: string;
+}
+
+export interface HeroStat {
+  label: string;
+  href: string;
+  count: number;
+}
+
+export interface HeroLatest {
+  title: string;
+  href: string;
+  date: string;
+  category: string;
+}
+
+export default function HeroSection({
+  tags,
+  stats,
+  latest,
+}: {
+  /** Desks with the most recent publications — refreshes as new posts are published. */
+  tags: HeroTag[];
+  /** Archive size per desk. */
+  stats: HeroStat[];
+  latest?: HeroLatest;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -15,34 +43,30 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative w-full overflow-hidden -mt-16 lg:-mt-20">
-      {/* Container — tall enough to breathe, not absurdly full-screen */}
+    <section className="relative w-full overflow-hidden -mt-16 lg:-mt-20 bg-black">
       <div className="relative w-full min-h-[700px] lg:min-h-[780px] flex flex-col p-6 sm:p-8 lg:px-12 lg:py-8 pt-24 lg:pt-32">
 
-        {/* ── Background image with gentle zoom ── */}
+        {/* ── Background image with slow zoom, toned down so text and the red accents carry ── */}
         <motion.img
-          src="/scenic mountain.jpg"
-          alt="Strategic landscape"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          src="/hero-mountains.webp"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-center brightness-[0.55] saturate-[0.85] contrast-[1.05]"
           initial={{ scale: 1 }}
           animate={{ scale: 1.15 }}
           transition={{ duration: 30, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
         />
 
-        {/* ── Adaptive Dynamic Overlays ── 
-            Reduced opacity so the mountain is clearly visible.
-        */}
-        <div className="absolute inset-0 bg-surface/10 dark:bg-black/30 transition-colors duration-700 pointer-events-none" />
-        
-        {/* Bottom fade that elegantly blends into the page background */}
-        <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none transition-colors duration-700" />
+        {/* Darkening layers: overall tint, vignette at the top for the navbar, fade into the page */}
+        <div className="absolute inset-0 bg-[#0a1118]/45 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)] pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none transition-colors duration-700" />
 
-        {/* ── Hero content — Middle section (Forced White Text for contrast against mountain) ── */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-3xl mx-auto w-full py-12 dark text-white">
 
           {/* Eyebrow */}
           <motion.div
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 backdrop-blur-md px-4 py-1.5 mb-7 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/30 backdrop-blur-md px-4 py-1.5 mb-7 shadow-sm"
             initial={{ opacity: 0, y: -15, filter: "blur(4px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -52,7 +76,7 @@ export default function HeroSection() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             </span>
             <span className="m3-label-sm text-white/90 uppercase tracking-[0.15em] font-semibold">
-              Red Lantern Analytica
+              International Affairs Observer · New Delhi
             </span>
           </motion.div>
 
@@ -64,7 +88,7 @@ export default function HeroSection() {
               lineHeight: 1.05,
               fontWeight: 300,
               letterSpacing: "-0.03em",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)" // Added drop shadow to ensure readability on 50% light gradient
+              textShadow: "0 2px 18px rgba(0,0,0,0.45)",
             }}
             initial={{ opacity: 0, y: 25, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -75,18 +99,14 @@ export default function HeroSection() {
 
           {/* Sub-text */}
           <motion.p
-            className="text-white/90 max-w-2xl mx-auto mb-10 font-light"
-            style={{ 
-              fontSize: "17px", 
-              lineHeight: "28px",
-              textShadow: "0 1px 4px rgba(0,0,0,0.4)" // Added drop shadow for contrast
-            }}
+            className="text-white/85 max-w-2xl mx-auto mb-10 font-light"
+            style={{ fontSize: "17px", lineHeight: "28px", textShadow: "0 1px 6px rgba(0,0,0,0.5)" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            Synthesizing maritime flashpoints, critical mineral supply bottlenecks,
-            and Eurasian power shifts for leading diplomatic councils.
+            Independent research and monthly trackers on nuclear issues, radicalisation, China and
+            India&apos;s neighbourhood — from Red Lantern Analytica.
           </motion.p>
 
           {/* Search bar */}
@@ -97,76 +117,81 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Subtle glow behind search bar */}
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            <div className="relative flex items-center bg-black/40 backdrop-blur-2xl rounded-full p-1.5 pl-5 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all">
+            <div className="relative flex items-center bg-black/45 backdrop-blur-2xl rounded-full p-1.5 pl-5 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all">
               <span className="material-symbols-outlined text-[20px] text-white/70 shrink-0">search</span>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 bg-transparent text-white text-[15px] outline-none placeholder:text-white/50 px-4 py-3"
-                placeholder="Search dossiers, regions, or analysis..."
+                className="flex-1 min-w-0 bg-transparent text-white text-[15px] outline-none placeholder:text-white/50 px-4 py-3"
+                placeholder="Search analyses, regions, or digests..."
                 type="text"
+                aria-label="Search the archive"
               />
               <button
                 type="submit"
-                className="shrink-0 rounded-full bg-primary px-7 py-3 m3-label-lg text-white uppercase tracking-widest hover:bg-primary/90 hover:shadow-md transition-all"
+                className="shrink-0 rounded-full bg-primary px-6 sm:px-7 py-3 m3-label-lg text-white uppercase tracking-widest hover:bg-primary/90 hover:shadow-md transition-all"
               >
                 Search
               </button>
             </div>
           </motion.form>
 
-          {/* Quick links */}
-          <motion.div
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.7 }}
-          >
-            {[
-              { label: "Nuclear Issues", href: "/category/nuclear-issues" },
-              { label: "China", href: "/category/china-digest" },
-              { label: "Radicalisation", href: "/category/radicalisation" },
-              { label: "Media Coverage", href: "/category/media-coverage" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="m3-label-sm text-white/80 uppercase tracking-[0.1em] hover:text-white transition-colors flex items-center gap-1.5"
-                style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-              >
-                <span className="w-1 h-1 rounded-full bg-white/40" />
-                {item.label}
-              </Link>
-            ))}
-          </motion.div>
+          {/* Content tags — the desks that published most recently */}
+          {tags.length > 0 && (
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.7 }}
+            >
+              <span className="m3-label-sm text-white/55 uppercase tracking-[0.15em]">Recently published in</span>
+              {tags.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="m3-label-sm text-white/90 uppercase tracking-[0.1em] hover:text-white transition-colors flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 hover:border-primary hover:bg-primary/20"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </motion.div>
+          )}
         </div>
 
-        {/* ── Telemetry bar — Bottom section (Adaptive text because it sits on the page background fade) ── */}
+        {/* ── Status bar: latest dispatch + archive size per desk ── */}
         <motion.div
-          className="relative z-10 max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-outline/10 text-on-surface-variant"
+          className="relative z-10 max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-5 border-t border-outline/15 text-on-surface-variant"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.2, delay: 0.9 }}
         >
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-            </span>
-            <span className="m3-label-sm uppercase tracking-widest font-medium text-on-surface">GSAT-7R Telemetry Active</span>
-            <span className="opacity-40 mx-1">/</span>
-            <span className="m3-label-sm uppercase tracking-widest">New Delhi Observatory</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-5">
-            <Link href="/nuclear-issues" className="m3-label-sm uppercase tracking-widest hover:text-on-surface transition-colors">Nuclear (208)</Link>
-            <span className="opacity-30">/</span>
-            <Link href="/radicalisation" className="m3-label-sm uppercase tracking-widest hover:text-on-surface transition-colors">Radicalisation (110)</Link>
-            <span className="opacity-30">/</span>
-            <Link href="/media-coverage" className="m3-label-sm uppercase tracking-widest hover:text-on-surface transition-colors">Media (84)</Link>
-          </div>
+          {latest && (
+            <Link href={latest.href} className="group flex items-center gap-3 min-w-0 max-w-full lg:max-w-[60%]">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              <span className="m3-label-sm uppercase tracking-widest font-semibold text-primary shrink-0">Latest dispatch</span>
+              <span className="m3-label-sm uppercase tracking-widest shrink-0 hidden sm:inline">{latest.date}</span>
+              <span className="opacity-40 shrink-0">/</span>
+              <span className="m3-label-md text-on-surface truncate group-hover:text-primary transition-colors">{latest.title}</span>
+            </Link>
+          )}
+          {stats.length > 0 && (
+            <div className="hidden md:flex items-center gap-4">
+              <span className="m3-label-sm uppercase tracking-widest opacity-70">Analyses on record:</span>
+              {stats.map((s, i) => (
+                <span key={s.href} className="flex items-center gap-4">
+                  {i > 0 && <span className="opacity-30">/</span>}
+                  <Link href={s.href} className="m3-label-sm uppercase tracking-widest hover:text-primary transition-colors">
+                    {s.label} <span className="text-on-surface font-semibold">{s.count}</span>
+                  </Link>
+                </span>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </section>

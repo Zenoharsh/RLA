@@ -19,7 +19,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <span className="h-2 w-2 rounded-full bg-primary"></span>
             <span className="font-label-caps text-label-caps uppercase tracking-widest text-primary font-semibold">SEARCH ARCHIVE</span>
           </div>
-          <h1 className="text-white font-display-hero text-[42px] tracking-tight leading-[1.1]">
+          <h1 className="text-on-surface font-display-hero text-[42px] tracking-tight leading-[1.1]">
             {query ? `Results for "${query}"` : "Search the Intelligence Archive"}
           </h1>
           

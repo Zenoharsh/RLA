@@ -26,7 +26,7 @@ export default async function PrivacyPage() {
 
         {/* Page Body */}
         <div 
-          className="prose prose-invert max-w-none prose-headings:font-headline-sm prose-p:font-body-md prose-p:text-on-surface-variant prose-p:leading-relaxed prose-a:text-primary hover:prose-a:text-primary-container prose-li:text-on-surface-variant prose-ul:my-4"
+          className="wp-content max-w-none"
           dangerouslySetInnerHTML={{ __html: page.content.rendered }}
         />
       </div>

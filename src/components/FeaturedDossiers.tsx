@@ -4,7 +4,7 @@ import Link from "next/link";
 
 function getCardMeta(post: WPPost, index: number) {
   const categoryObj = post._embedded?.["wp:term"]?.[0]?.[0];
-  const categoryName = categoryObj ? categoryObj.name.toUpperCase() : "STRATEGIC BRIEF";
+  const categoryName = categoryObj ? stripHtml(categoryObj.name).toUpperCase() : "STRATEGIC BRIEF";
   const categorySlug = categoryObj ? categoryObj.slug : "";
   const authorObj = post._embedded?.author?.[0];
   const authorName = authorObj ? authorObj.name : "Red Lantern Analytica";
@@ -26,7 +26,7 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
   const [lead, ...rest] = posts;
   const leadMeta = getCardMeta(lead, 0);
 
-  const archiveLink = activeCategory === "all" ? "/archives" : `/category/${activeCategory}`;
+  const archiveLink = activeCategory === "all" ? "/articles" : `/${activeCategory}`;
 
   return (
     <section className="w-full bg-background py-16 lg:py-24" id="featured-dossiers">
@@ -73,7 +73,7 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
                   </span>
                 </div>
                 <h3 className="font-headline-lg text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-4" style={{ fontSize: "28px", lineHeight: "36px" }}>
-                  {lead.title.rendered}
+                  {stripHtml(lead.title.rendered)}
                 </h3>
                 <p className="font-body-md text-on-surface-variant font-light leading-relaxed line-clamp-2 mb-6">
                   {stripHtml(lead.excerpt.rendered)}
@@ -90,6 +90,16 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
                   </span>
                 </div>
               </div>
+              {leadMeta.featuredImage && (
+                <div className="relative w-full md:w-[42%] aspect-[16/9] md:aspect-auto overflow-hidden shrink-0 order-first md:order-last">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={leadMeta.featuredImage}
+                    alt={stripHtml(lead.title.rendered)}
+                    className="ken-burns absolute inset-0 h-full w-full object-cover"
+                  />
+                </div>
+              )}
             </article>
           </Link>
         </div>

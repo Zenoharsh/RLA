@@ -1,8 +1,23 @@
 import IntelligenceFeedItem from "./IntelligenceFeedItem";
-import { WPPost, stripHtml, formatDate } from "@/lib/api";
+import { WPPost, WPCategory, stripHtml, formatDate } from "@/lib/api";
 import Link from "next/link";
 
-export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
+const REGION_SLUGS = ["afghanistan", "asia", "china", "west-asia"];
+
+export default function LiveTelemetryDashboard({
+  posts,
+  categories,
+  totalAnalyses,
+}: {
+  posts: WPPost[];
+  categories: WPCategory[];
+  totalAnalyses: number;
+}) {
+  const desks = categories
+    .filter((c) => c.slug !== "uncategorized" && c.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const regions = REGION_SLUGS.map((slug) => desks.find((c) => c.slug === slug)).filter((c): c is WPCategory => !!c);
+
   return (
     <section className="w-full bg-surface-container-low py-16 lg:py-24" id="live-telemetry">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -16,7 +31,7 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
               <span className="font-label-caps text-label-caps uppercase tracking-widest text-primary font-semibold">
-                GEOSPATIAL SITUATIONAL AWARENESS
+                STATEMENTS · COMMENTARIES · MEDIA
               </span>
             </div>
             <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
@@ -24,12 +39,16 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-caps text-label-caps shadow-sm">
-              GRID INTERVAL: 15 MIN
-            </span>
-            <span className="px-3.5 py-1.5 rounded-full bg-primary-container/15 text-primary font-label-caps text-label-caps font-semibold">
-              ENCRYPTED TELEMETRY
-            </span>
+            {posts[0] && (
+              <span className="px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-caps text-label-caps shadow-sm">
+                UPDATED {formatDate(posts[0].date)}
+              </span>
+            )}
+            {totalAnalyses > 0 && (
+              <span className="px-3.5 py-1.5 rounded-full bg-primary-container/15 text-primary font-label-caps text-label-caps font-semibold">
+                {totalAnalyses} ANALYSES ON RECORD
+              </span>
+            )}
           </div>
         </div>
 
@@ -41,8 +60,7 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
             {posts.length > 0 ? (
               posts.map((post, index) => {
                 const categoryObj = post._embedded?.["wp:term"]?.[0]?.[0];
-                const categoryName = categoryObj ? categoryObj.name : "Intelligence";
-                const categorySlug = categoryObj ? categoryObj.slug : "";
+                const categoryName = categoryObj ? stripHtml(categoryObj.name) : "Intelligence";
                 const colors = ["text-primary", "text-secondary", "text-error", "text-primary", "text-tertiary"];
                 return (
                   <Link href={`/article/${post.slug}`} key={post.id} className="block">
@@ -50,20 +68,20 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
                       category={categoryName}
                       categoryColorClass={colors[index % colors.length]}
                       date={formatDate(post.date)}
-                      title={post.title.rendered}
+                      title={stripHtml(post.title.rendered)}
                       summary={stripHtml(post.excerpt.rendered)}
                     />
                   </Link>
                 );
               })
             ) : (
-              <p className="text-on-surface-variant font-body-sm py-8 text-center">Loading intelligence feed...</p>
+              <p className="text-on-surface-variant font-body-sm py-8 text-center">No recent statements or commentaries.</p>
             )}
             <Link
-              href="/nuclear-issues"
+              href="/articles"
               className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-full border border-outline/30 py-3 font-body-sm text-on-surface-variant hover:border-primary hover:text-primary transition-all"
             >
-              Access Complete Feed Archives
+              Browse all publications
               <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
             </Link>
           </div>
@@ -74,28 +92,21 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
             {/* Active theatres count */}
             <div className="rounded-3xl bg-surface-container-lowest p-7 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="font-headline-sm text-headline-sm text-on-surface">Coverage Map</span>
-                <span className="font-label-caps text-label-caps text-primary font-bold">LIVE</span>
+                <span className="font-headline-sm text-headline-sm text-on-surface">Research Desks</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">ANALYSES PUBLISHED</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Nuclear Issues", count: "208", slug: "nuclear-issues" },
-                  { label: "Radicalisation", count: "110", slug: "radicalisation" },
-                  { label: "Media Coverage", count: "84", slug: "media-coverage" },
-                  { label: "Commentaries", count: "29", slug: "commentaries" },
-                  { label: "Afghanistan", count: "74", slug: "afghanistan" },
-                  { label: "Statements", count: "6", slug: "statements" },
-                ].map(item => (
+                {desks.slice(0, 6).map(item => (
                   <Link
                     key={item.slug}
-                    href={`/category/${item.slug}`}
+                    href={`/${item.slug}`}
                     className="group flex flex-col gap-1 rounded-2xl bg-surface-container p-4 hover:bg-surface-container-high transition-colors"
                   >
                     <span className="font-label-numeric text-[28px] font-extralight text-primary leading-none">
                       {item.count}
                     </span>
                     <span className="font-label-caps text-[10px] text-on-surface-variant uppercase group-hover:text-primary transition-colors">
-                      {item.label}
+                      {stripHtml(item.name)}
                     </span>
                   </Link>
                 ))}
@@ -106,16 +117,16 @@ export default function LiveTelemetryDashboard({ posts }: { posts: WPPost[] }) {
             <div className="rounded-3xl bg-primary p-7 shadow-sm flex flex-col gap-3">
               <span className="font-label-caps text-label-caps text-on-primary/70 uppercase">BROWSE BY REGION</span>
               <h3 className="font-headline-sm text-on-primary leading-snug">
-                Explore All 14 Active Intelligence Theaters
+                Explore all {desks.length} research desks
               </h3>
               <div className="flex flex-wrap gap-2 mt-2">
-                {["Afghanistan", "Asia", "West Asia", "Reports"].map(cat => (
+                {regions.map(cat => (
                   <Link
-                    key={cat}
-                    href={`/category/${cat.toLowerCase().replace(/ /g, "-")}`}
+                    key={cat.slug}
+                    href={`/${cat.slug}`}
                     className="rounded-full border border-on-primary/30 px-3 py-1 font-label-caps text-label-caps text-on-primary/90 hover:bg-on-primary/10 transition-colors"
                   >
-                    {cat}
+                    {stripHtml(cat.name)}
                   </Link>
                 ))}
               </div>

@@ -1,9 +1,12 @@
-const API_URL = "https://redlanternanalytica.com/wp-json/wp/v2";
+// WP_API_URL lets local development point at a mirror/mock when the origin is unreachable.
+const API_URL = process.env.WP_API_URL || "https://redlanternanalytica.com/wp-json/wp/v2";
 
 export interface WPPost {
   id: number;
   date: string;
+  modified?: string;
   slug: string;
+  categories?: number[];
   title: {
     rendered: string;
   };
@@ -40,100 +43,108 @@ export interface WPCategory {
   name: string;
   slug: string;
   count: number;
+  parent?: number;
+}
+
+export interface PostsPage {
+  posts: WPPost[];
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Fetch from the WP REST API, retrying once. Throws on failure on purpose: during ISR a thrown
+ * error keeps the last good page online, whereas returning [] would cache an empty page / 404.
+ * Callers that can live without the data should `.catch()` with a fallback.
+ */
+async function wpFetch(path: string, init: RequestInit & { next?: { revalidate?: number } }): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${API_URL}${path}`, init);
+      if (res.ok) return res;
+      lastError = new Error(`WP ${path} responded ${res.status}`);
+      if (res.status < 500) break; // 4xx won't improve on retry
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * Paginated post query. `categories` / `exclude` are WP category IDs.
+ */
+export async function fetchPostsPage({
+  perPage = 12,
+  page = 1,
+  categories,
+  exclude,
+}: {
+  perPage?: number;
+  page?: number;
+  categories?: number[];
+  exclude?: number[];
+} = {}): Promise<PostsPage> {
+  const params = new URLSearchParams({ per_page: String(perPage), page: String(page), _embed: "1" });
+  if (categories?.length) params.set("categories", categories.join(","));
+  if (exclude?.length) params.set("categories_exclude", exclude.join(","));
+  const res = await wpFetch(`/posts?${params}`, { next: { revalidate: 1800 } });
+  return {
+    posts: await res.json(),
+    total: Number(res.headers.get("x-wp-total") ?? 0),
+    totalPages: Number(res.headers.get("x-wp-totalpages") ?? 1),
+  };
 }
 
 export async function fetchPosts(limit = 5): Promise<WPPost[]> {
-  try {
-    const res = await fetch(`${API_URL}/posts?per_page=${limit}&_embed`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) throw new Error("Failed to fetch posts");
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching posts:", error);
-    return [];
-  }
+  return (await fetchPostsPage({ perPage: limit })).posts;
 }
 
 export async function fetchCategories(): Promise<WPCategory[]> {
-  try {
-    const res = await fetch(`${API_URL}/categories?per_page=100`, {
-      next: { revalidate: 86400 }, // Cache for a day
-    });
-    if (!res.ok) throw new Error("Failed to fetch categories");
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    return [];
-  }
+  const res = await wpFetch(`/categories?per_page=100`, { next: { revalidate: 86400 } });
+  return res.json();
+}
+
+/**
+ * Resolve a category by exact slug. Sub-categories (e.g. china under asia) are
+ * returned in `ids` so a parent archive also lists its children's posts.
+ */
+export async function resolveCategory(
+  slug: string
+): Promise<{ category: WPCategory; ids: number[] } | null> {
+  const categories = await fetchCategories();
+  const category = categories.find((c) => c.slug === slug);
+  if (!category) return null;
+  const ids = [category.id, ...categories.filter((c) => c.parent === category.id).map((c) => c.id)];
+  return { category, ids };
 }
 
 export async function fetchPostsByCategory(slug: string, limit = 20): Promise<WPPost[]> {
-  try {
-    // First resolve the slug to an ID
-    const categories = await fetchCategories();
-    
-    // Exact match first
-    let category = categories.find(c => c.slug === slug);
-    
-    // If not found, try fuzzy matching (e.g. mapping /china-digest to 'china', /reports to 'report')
-    if (!category) {
-      const cleanSlug = slug.replace(/-digest|-brief|-region/g, '').replace(/s$/, ''); // removes suffixes and trailing 's' (reports -> report)
-      category = categories.find(c => 
-        c.slug === cleanSlug || slug.includes(c.slug) || c.name.toLowerCase().includes(cleanSlug.toLowerCase())
-      );
-    }
-
-    if (!category) {
-      console.warn(`Category not found for slug: ${slug}`);
-      return [];
-    }
-
-    const res = await fetch(`${API_URL}/posts?categories=${category.id}&per_page=${limit}&_embed`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) throw new Error("Failed to fetch category posts");
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching posts by category:", error);
-    return [];
-  }
+  const resolved = await resolveCategory(slug);
+  if (!resolved) return [];
+  return (await fetchPostsPage({ perPage: limit, categories: resolved.ids })).posts;
 }
 
+/** Returns null when no post has this slug; throws when WordPress can't be reached. */
 export async function fetchPostBySlug(slug: string): Promise<WPPost | null> {
-  try {
-    const res = await fetch(`${API_URL}/posts?slug=${slug}&_embed`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const posts = await res.json();
-    return posts.length > 0 ? posts[0] : null;
-  } catch (error) {
-    console.error("Error fetching post by slug:", error);
-    return null;
-  }
+  const res = await wpFetch(`/posts?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
+  const posts: WPPost[] = await res.json();
+  return posts[0] ?? null;
 }
 
+/** Returns null when no page has this slug; throws when WordPress can't be reached. */
 export async function fetchPageBySlug(slug: string): Promise<WPPost | null> {
-  try {
-    const res = await fetch(`${API_URL}/pages?slug=${slug}&_embed`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const pages = await res.json();
-    return pages.length > 0 ? pages[0] : null;
-  } catch (error) {
-    console.error("Error fetching page by slug:", error);
-    return null;
-  }
+  const res = await wpFetch(`/pages?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
+  const pages: WPPost[] = await res.json();
+  return pages[0] ?? null;
 }
 
 export async function searchPosts(query: string, limit = 20): Promise<WPPost[]> {
   try {
-    const res = await fetch(`${API_URL}/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed`, {
+    const res = await wpFetch(`/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed`, {
       cache: "no-store", // Search results shouldn't be cached aggressively
     });
-    if (!res.ok) throw new Error("Failed to search posts");
     return res.json();
   } catch (error) {
     console.error("Error searching posts:", error);
@@ -141,27 +152,144 @@ export async function searchPosts(query: string, limit = 20): Promise<WPPost[]> 
   }
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'",
+  hellip: "\u2026", ndash: "\u2013", mdash: "\u2014",
+  lsquo: "\u2018", rsquo: "\u2019", ldquo: "\u201C", rdquo: "\u201D",
+};
+
+/**
+ * Decode HTML entities (WP titles arrive as e.g. "India&#8217;s"). Safe to render as text.
+ */
+export function decodeEntities(text: string) {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+    if (code[0] === "#") {
+      const n = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return Number.isFinite(n) ? String.fromCodePoint(n) : match;
+    }
+    return NAMED_ENTITIES[code.toLowerCase()] ?? match;
+  });
+}
+
 /**
  * Utility function to strip HTML tags from a string
  */
 export function stripHtml(html: string) {
-  return html
-    .replace(/<[^>]*>?/gm, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#038;/g, "&")
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8216;/g, "'")
-    .replace(/&#8220;/g, "\u201C")
-    .replace(/&#8221;/g, "\u201D")
-    .replace(/&#8211;/g, "\u2013")
-    .replace(/&#8212;/g, "\u2014")
-    .replace(/&[a-z]+;/gi, " ")
+  return decodeEntities(html.replace(/<[^>]*>?/gm, ""))
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/* ------------------------------------------------------------------ */
+/* Trackers (digests)                                                  */
+/* ------------------------------------------------------------------ */
+
+export interface TrackerIssue {
+  title: string;
+  period: string;
+  cover?: string;
+  pdf: string;
+}
+
+export interface Tracker {
+  slug: string;
+  title: string;
+  description: string;
+  issues: TrackerIssue[];
+  modified?: string;
+}
+
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+
+/**
+ * Derive a human period ("February 2026", "1\u201315 August 2025") from a PDF file name.
+ * When the name has no year, the upload folder (/uploads/YYYY/MM/) is used to infer it.
+ */
+function issuePeriod(pdfUrl: string): string {
+  const file = decodeURIComponent(pdfUrl.split("/").pop() || "").replace(/\.pdf$/i, "").toLowerCase();
+  const words = file.split(/[^a-z0-9]+/).filter(Boolean);
+
+  let month = -1;
+  for (const w of words) {
+    // Abbreviations ("feb", "sept") or near-misspellings ("janurary"), but not words like "decision"
+    const idx = MONTHS.findIndex(
+      (m) =>
+        (w.length >= 3 && m.startsWith(w)) ||
+        (w.length > 4 && m.slice(0, 4) === w.slice(0, 4) && Math.abs(m.length - w.length) <= 1)
+    );
+    if (idx !== -1) { month = idx; break; }
+  }
+  const yearMatch = file.match(/20\d\d/);
+  let year = yearMatch ? Number(yearMatch[0]) : undefined;
+
+  if (!year && month !== -1) {
+    const upload = pdfUrl.match(/uploads\/(20\d\d)\/(\d\d)\//);
+    if (upload) {
+      year = Number(upload[1]);
+      if (month + 1 > Number(upload[2])) year -= 1;
+    }
+  }
+
+  const range = file.match(/(?:^|[^0-9])(\d{1,2})(?:st|nd|rd|th)?[- ](?:to|t0)?-?(\d{1,2})(?:st|nd|rd|th)?(?=[^0-9])/);
+  const dayRange = range && Number(range[1]) <= 31 && Number(range[2]) <= 31 ? `${Number(range[1])}\u2013${Number(range[2])} ` : "";
+
+  if (month === -1) return year ? String(year) : "";
+  const monthName = MONTHS[month][0].toUpperCase() + MONTHS[month].slice(1);
+  return `${dayRange}${monthName}${year ? ` ${year}` : ""}`;
+}
+
+/** Pick the widest srcset candidate up to `maxWidth`, falling back to src. */
+function bestImage(tag: string, maxWidth = 1100): string | undefined {
+  const src = tag.match(/\ssrc=["']([^"']+)["']/i)?.[1];
+  const srcset = tag.match(/\ssrcset=["']([^"']+)["']/i)?.[1];
+  if (!srcset) return src;
+  const candidates = srcset
+    .split(",")
+    .map((c) => c.trim().split(/\s+/))
+    .map(([url, w]) => ({ url, w: parseInt(w, 10) || 0 }))
+    .filter((c) => c.w && c.w <= maxWidth)
+    .sort((a, b) => b.w - a.w);
+  return candidates[0]?.url ?? src;
+}
+
+/**
+ * Digest pages in WordPress are Elementor layouts of (cover image -> "View More" PDF button)
+ * pairs. Walk the markup in document order and pair each PDF link with the image before it.
+ */
+export function parseTrackerHtml(html: string): Omit<Tracker, "slug" | "title"> {
+  const issues: TrackerIssue[] = [];
+  const seen = new Set<string>();
+  let pendingCover: string | undefined;
+
+  const tagRe = /<img\b[^>]*>|<a\b[^>]*href=["']([^"']+\.pdf)["'][^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(html))) {
+    if (m[0].toLowerCase().startsWith("<img")) {
+      pendingCover = bestImage(m[0]);
+      continue;
+    }
+    const pdf = m[1];
+    if (seen.has(pdf)) continue;
+    seen.add(pdf);
+    const period = issuePeriod(pdf);
+    issues.push({ pdf, cover: pendingCover, period, title: period || "Issue" });
+    pendingCover = undefined;
+  }
+
+  // First meaningful paragraph (skip "Home / ..." breadcrumbs) is the tracker's description.
+  const description =
+    [...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
+      .map((p) => stripHtml(p[1]))
+      .find((t) => t.length > 60 && !/^home\s*\//i.test(t)) ?? "";
+
+  return { description, issues };
+}
+
+export async function fetchTracker(slug: string): Promise<Tracker | null> {
+  const page = await fetchPageBySlug(slug);
+  if (!page) return null;
+  const parsed = parseTrackerHtml(page.content.rendered);
+  return { slug, title: decodeEntities(page.title.rendered), modified: page.modified ?? page.date, ...parsed };
 }
 
 /**
