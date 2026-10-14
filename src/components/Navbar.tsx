@@ -39,7 +39,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6 xl:gap-10">
           <Link
-            className="flex items-center shrink-0 rounded-xl bg-white/85 backdrop-blur-md px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:bg-white/95 hover:shadow-md transition-all duration-300"
+            className="flex items-center shrink-0 rounded-xl bg-white px-2.5 py-1.5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow duration-300"
             href="/"
             aria-label="Red Lantern Analytica home"
           >
