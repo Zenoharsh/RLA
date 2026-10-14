@@ -3,6 +3,10 @@
 /* Theme is toggled with a class on <html> (next-themes), not the OS preference */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Navbar sitting transparently over the home hero: the page contains #home-hero and the bar
+   is neither scrolled nor open. Pure CSS, so the server-rendered HTML is right on every route. */
+@custom-variant overhero (&:where(body:has(#home-hero) [data-nav]:not([data-solid="true"]), body:has(#home-hero) [data-nav]:not([data-solid="true"]) *));
+
 @theme {
   /* =============================================
      ORIGINAL BRAND COLORS — UNTOUCHED

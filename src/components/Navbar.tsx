@@ -13,17 +13,8 @@ const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
   { label: "Contribute", links: CONTRIBUTE_LINKS },
 ];
 
-/** Full wordmark; swaps to the light-text variant on dark backgrounds (hero overlay or dark theme). */
-function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-full.png" alt="Red Lantern Analytica" className={`${className} block dark:hidden`} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-full-light.png" alt="Red Lantern Analytica" className={`${className} hidden dark:block`} />
-    </>
-  );
-}
+const ICON_BUTTON =
+  "items-center justify-center w-10 h-10 rounded-full transition-all border border-outline/20 text-on-surface hover:bg-surface-container overhero:border-transparent overhero:bg-black/25 overhero:text-white overhero:hover:bg-black/45 overhero:backdrop-blur-sm";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,7 +22,6 @@ export default function Navbar() {
   // The drawer remembers the path it was opened on, so navigating anywhere closes it.
   const [menuOpenedOn, setMenuOpenedOn] = useState<string | null>(null);
   const isMobileMenuOpen = menuOpenedOn === pathname;
-  const isHomepage = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -40,25 +30,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isTransparent = isHomepage && !isScrolled && !isMobileMenuOpen;
-  const itemHover = isTransparent ? "hover:bg-white/10 hover:text-white" : "hover:bg-surface-container hover:text-primary";
-
   return (
     <div
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        !isTransparent
-          ? "bg-surface/90 dark:bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline/10 shadow-sm text-on-surface"
-          : "bg-gradient-to-b from-black/50 to-transparent border-b-0 border-transparent text-white dark"
-      }`}
+      data-nav
+      data-solid={isScrolled || isMobileMenuOpen}
+      className="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline/10 shadow-sm text-on-surface overhero:bg-transparent overhero:bg-gradient-to-b overhero:from-black/55 overhero:to-transparent overhero:border-transparent overhero:shadow-none overhero:backdrop-blur-none overhero:text-white"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6 xl:gap-10">
-          <Link className="flex items-center hover:opacity-90 transition-opacity shrink-0" href="/" aria-label="Red Lantern Analytica — Home">
-            <Wordmark className="h-10 lg:h-12 w-auto object-contain" />
+          <Link
+            className="flex items-center shrink-0 rounded-xl bg-white px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow"
+            href="/"
+            aria-label="Red Lantern Analytica home"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-full.png" alt="Red Lantern Analytica" className="h-8 lg:h-9 w-auto object-contain" />
           </Link>
-          <nav className={`hidden lg:flex items-center gap-5 xl:gap-6 ${!isTransparent ? "text-on-surface-variant" : "text-white/90"}`}>
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-6 text-on-surface-variant overhero:text-white/90">
             <Link
-              className={`m3-label-lg font-medium transition-colors ${!isTransparent ? "text-on-surface hover:text-primary" : "text-white hover:text-white/70"}`}
+              className="m3-label-lg font-medium transition-colors text-on-surface hover:text-primary overhero:text-white overhero:hover:text-white/70"
               href="/"
             >
               Home
@@ -68,24 +58,20 @@ export default function Navbar() {
               <div key={menu.label} className="relative group py-2">
                 <button
                   type="button"
-                  className={`transition-colors flex items-center gap-1 font-medium m3-label-lg ${!isTransparent ? "hover:text-on-surface" : "hover:text-white"}`}
+                  className="transition-colors flex items-center gap-1 font-medium m3-label-lg hover:text-on-surface overhero:hover:text-white"
                 >
                   {menu.label} <span className="material-symbols-outlined text-[16px]">expand_more</span>
                 </button>
                 <div
-                  className={`absolute left-0 top-full hidden group-hover:block group-focus-within:block rounded-xl shadow-lg border z-50 ${
+                  className={`absolute left-0 top-full hidden group-hover:block group-focus-within:block rounded-xl shadow-lg border z-50 backdrop-blur-md bg-surface-container-lowest/95 border-outline/20 text-on-surface-variant overhero:bg-black/90 overhero:border-white/20 overhero:text-white ${
                     menu.wide ? "p-3 min-w-[480px]" : "py-2 min-w-[220px]"
-                  } ${
-                    isTransparent
-                      ? "bg-black/90 backdrop-blur-md border-white/20 text-white"
-                      : "bg-surface-container-lowest/95 backdrop-blur-md border-outline/20 text-on-surface-variant"
                   }`}
                 >
                   <ul className={menu.wide ? "grid grid-cols-2 gap-x-2 gap-y-0.5" : "flex flex-col"}>
                     {menu.links.map((link) => (
                       <li key={link.href}>
                         <Link
-                          className={`block px-4 py-2 transition-colors text-[14px] ${menu.wide ? "rounded-lg" : ""} ${itemHover} ${
+                          className={`block px-4 py-2 transition-colors text-[14px] ${menu.wide ? "rounded-lg" : ""} hover:bg-surface-container hover:text-primary overhero:hover:bg-white/10 overhero:hover:text-white ${
                             pathname === link.href ? "text-primary" : ""
                           }`}
                           href={link.href}
@@ -102,31 +88,19 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <ThemeToggle isTransparent={isTransparent} />
-          <Link
-            href="/search"
-            aria-label="Search"
-            className={`hidden sm:inline-flex items-center justify-center w-10 h-10 rounded-full transition-all ${
-              !isTransparent
-                ? "border border-outline/20 text-on-surface hover:bg-surface-container"
-                : "border-transparent bg-black/20 text-white hover:bg-black/40 backdrop-blur-sm"
-            }`}
-          >
+          <ThemeToggle className={`inline-flex shrink-0 ${ICON_BUTTON}`} />
+          <Link href="/search" aria-label="Search" className={`hidden sm:inline-flex ${ICON_BUTTON}`}>
             <span className="material-symbols-outlined text-[18px]">search</span>
           </Link>
           <Link
-            className={`hidden sm:inline-flex px-6 py-2 rounded-full m3-label-lg font-medium transition-all shadow-sm ${
-              !isTransparent ? "bg-primary text-white hover:bg-primary/90" : "bg-white text-black hover:bg-white/90"
-            }`}
+            className="hidden sm:inline-flex px-6 py-2 rounded-full m3-label-lg font-medium transition-all shadow-sm bg-primary text-white hover:bg-primary/90 overhero:bg-white overhero:text-black overhero:hover:bg-white/90"
             href="/#dispatch-form"
           >
             Subscribe
           </Link>
 
           <button
-            className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-full transition-all ${
-              !isTransparent ? "bg-surface-container text-on-surface" : "bg-white/20 text-white backdrop-blur-sm"
-            }`}
+            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full transition-all bg-surface-container text-on-surface overhero:bg-white/20 overhero:text-white overhero:backdrop-blur-sm"
             onClick={() => setMenuOpenedOn(isMobileMenuOpen ? null : pathname)}
             aria-label="Toggle mobile menu"
             aria-expanded={isMobileMenuOpen}

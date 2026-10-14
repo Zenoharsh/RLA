@@ -43,7 +43,7 @@ export default function HeroSection({
   }
 
   return (
-    <section className="relative w-full overflow-hidden -mt-16 lg:-mt-20 bg-black">
+    <section id="home-hero" className="relative w-full overflow-hidden -mt-16 lg:-mt-20 bg-black">
       <div className="relative w-full min-h-[700px] lg:min-h-[780px] flex flex-col p-6 sm:p-8 lg:px-12 lg:py-8 pt-24 lg:pt-32">
 
         {/* ── Background image with slow zoom, toned down so text and the red accents carry ── */}
@@ -56,11 +56,11 @@ export default function HeroSection({
           transition={{ duration: 30, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
         />
 
-        {/* Darkening layers: overall tint, vignette at the top for the navbar, fade into the page */}
+        {/* Darkening layers: overall tint, vignette, and shade at the top (navbar) and bottom (status bar) */}
         <div className="absolute inset-0 bg-[#0a1118]/45 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)] pointer-events-none" />
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none transition-colors duration-700" />
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-3xl mx-auto w-full py-12 dark text-white">
 
@@ -162,7 +162,7 @@ export default function HeroSection({
 
         {/* ── Status bar: latest dispatch + archive size per desk ── */}
         <motion.div
-          className="relative z-10 max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-5 border-t border-outline/15 text-on-surface-variant"
+          className="dark relative z-10 max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-5 border-t border-white/15 text-white/70"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.2, delay: 0.9 }}
