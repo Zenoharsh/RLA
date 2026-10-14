@@ -22,7 +22,7 @@ export default async function PictureCarousel() {
   return (
     <section className="w-full bg-surface-container-low py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="font-headline-md text-on-surface mb-8">Strategic Gallery</h2>
+        <h2 data-reveal className="font-headline-md text-on-surface mb-8">Strategic Gallery</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar">
           {galleryItems.map(item => (
             <Link href={`/article/${item.slug}`} key={item.id} className="group min-w-[300px] sm:min-w-[400px] h-[250px] bg-surface-container-lowest rounded-2xl snap-center flex-shrink-0 flex items-center justify-center relative overflow-hidden shadow-sm hover:shadow-lg transition-all border border-outline/10 cursor-pointer">

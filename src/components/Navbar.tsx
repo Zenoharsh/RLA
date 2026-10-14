@@ -34,12 +34,12 @@ export default function Navbar() {
     <div
       data-nav
       data-solid={isScrolled || isMobileMenuOpen}
-      className="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline/10 shadow-sm text-on-surface overhero:bg-transparent overhero:bg-gradient-to-b overhero:from-black/55 overhero:to-transparent overhero:border-transparent overhero:shadow-none overhero:backdrop-blur-none overhero:text-white"
+      className="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline/10 shadow-sm text-on-surface overhero:bg-transparent overhero:border-transparent overhero:shadow-none overhero:backdrop-blur-none overhero:text-white"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6 xl:gap-10">
           <Link
-            className="flex items-center shrink-0 rounded-xl bg-white px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow"
+            className="flex items-center shrink-0 rounded-xl bg-white/85 backdrop-blur-md px-3 py-1.5 shadow-sm ring-1 ring-black/5 hover:bg-white/95 hover:shadow-md transition-all duration-300"
             href="/"
             aria-label="Red Lantern Analytica home"
           >
@@ -60,10 +60,13 @@ export default function Navbar() {
                   type="button"
                   className="transition-colors flex items-center gap-1 font-medium m3-label-lg hover:text-on-surface overhero:hover:text-white"
                 >
-                  {menu.label} <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                  {menu.label}{" "}
+                  <span className="material-symbols-outlined text-[16px] transition-transform duration-300 group-hover:rotate-180 group-focus-within:rotate-180">
+                    expand_more
+                  </span>
                 </button>
                 <div
-                  className={`absolute left-0 top-full hidden group-hover:block group-focus-within:block rounded-xl shadow-lg border z-50 backdrop-blur-md bg-surface-container-lowest/95 border-outline/20 text-on-surface-variant overhero:bg-black/90 overhero:border-white/20 overhero:text-white ${
+                  className={`absolute left-0 top-full invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-300 ease-out rounded-xl shadow-lg border z-50 backdrop-blur-md bg-surface-container-lowest/95 border-outline/20 text-on-surface-variant overhero:bg-black/90 overhero:border-white/20 overhero:text-white ${
                     menu.wide ? "p-3 min-w-[480px]" : "py-2 min-w-[220px]"
                   }`}
                 >
@@ -112,7 +115,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-[100%] left-0 w-full h-[calc(100dvh-64px)] bg-surface-container-lowest/95 backdrop-blur-2xl border-t border-outline/10 text-on-surface overflow-y-auto">
+        <div className="animate-drawer-in lg:hidden absolute top-[100%] left-0 w-full h-[calc(100dvh-64px)] bg-surface-container-lowest/95 backdrop-blur-2xl border-t border-outline/10 text-on-surface overflow-y-auto">
           <div className="flex flex-col px-6 py-8 gap-6">
             <Link className="font-headline-sm hover:text-primary transition-colors" href="/">
               Home

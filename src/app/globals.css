@@ -360,6 +360,36 @@
 }
 
 /* =============================================
+   SCROLL REVEAL — see RevealObserver.tsx. Only hides content once JS has
+   loaded (.reveal-ready), so nothing is invisible without JavaScript.
+   ============================================= */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  --reveal-delay: calc(min(var(--i, 0), 8) * 70ms);
+  /* Keep hover transitions (translate, shadow) smooth on revealed elements too */
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay),
+    translate 0.5s ease,
+    box-shadow 0.5s ease,
+    background-color 0.3s ease;
+}
+.reveal-ready [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
+@keyframes drawer-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-drawer-in { animation: drawer-in 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* =============================================
    WORDPRESS CONTENT (articles & pages)
    ============================================= */
 .wp-content { color: var(--color-on-surface-variant); font-size: 1.0625rem; line-height: 1.85; overflow-wrap: anywhere; }

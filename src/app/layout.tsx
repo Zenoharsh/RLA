@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Hanken_Grotesk, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
+import RevealObserver from "@/components/RevealObserver";
 import "./globals.css";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Navbar />
           {children}
+          <RevealObserver />
         </ThemeProvider>
       </body>
     </html>

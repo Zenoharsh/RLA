@@ -37,7 +37,7 @@ export default function MediaCoverage({ posts }: Props) {
     <section className="w-full bg-surface py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-12">
+        <div data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-12">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="h-2 w-2 rounded-full bg-secondary" />
@@ -60,12 +60,12 @@ export default function MediaCoverage({ posts }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {hasRealPosts
-            ? posts.slice(0, 3).map((post) => {
+            ? posts.slice(0, 3).map((post, i) => {
                 const categoryObj = post._embedded?.["wp:term"]?.[0]?.[0];
                 const categoryName = categoryObj ? categoryObj.name.toUpperCase() : "MEDIA COVERAGE";
                 return (
-                  <Link href={`/article/${post.slug}`} key={post.id} className="block group h-full">
-                    <article className="h-full rounded-3xl bg-surface-container-lowest p-7 shadow-sm flex flex-col hover:shadow-md transition-all">
+                  <Link href={`/article/${post.slug}`} key={post.id} data-reveal style={{ "--i": i } as React.CSSProperties} className="block group h-full">
+                    <article className="h-full rounded-3xl bg-surface-container-lowest p-7 shadow-sm flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-500">
                       <div className="flex items-center justify-between text-on-surface-variant mb-3">
                         <span className="font-label-caps text-label-caps uppercase text-secondary font-semibold">{categoryName}</span>
                         <span className="font-label-caps text-label-caps">{formatDate(post.date)}</span>
@@ -84,8 +84,8 @@ export default function MediaCoverage({ posts }: Props) {
                   </Link>
                 );
               })
-            : staticItems.map((item) => (
-                <article key={item.title} className="rounded-3xl bg-surface-container-lowest p-7 shadow-sm flex flex-col hover:shadow-md transition-all">
+            : staticItems.map((item, i) => (
+                <article key={item.title} data-reveal style={{ "--i": i } as React.CSSProperties} className="rounded-3xl bg-surface-container-lowest p-7 shadow-sm flex flex-col hover:shadow-md transition-all">
                   <div className="flex items-center justify-between text-on-surface-variant mb-3">
                     <span className="font-label-caps text-label-caps uppercase text-secondary font-semibold">{item.category}</span>
                     <span className="font-label-caps text-label-caps">{item.date}</span>

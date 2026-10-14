@@ -34,7 +34,13 @@ export default function PostGrid({
           const authorName = post._embedded?.author?.[0]?.name ?? "Red Lantern Analytica";
           const catObj = post._embedded?.["wp:term"]?.[0]?.[0];
           return (
-            <Link href={`/article/${post.slug}`} key={post.id} className="block group h-full">
+            <Link
+              href={`/article/${post.slug}`}
+              key={post.id}
+              data-reveal
+              style={{ "--i": index % 3 } as React.CSSProperties}
+              className="block group h-full"
+            >
               <DossierCard
                 category={catObj ? stripHtml(catObj.name).toUpperCase() : fallbackCategory}
                 date={formatDate(post.date)}

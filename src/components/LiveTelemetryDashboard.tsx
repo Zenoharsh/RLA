@@ -23,7 +23,7 @@ export default function LiveTelemetryDashboard({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Section header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-10">
+        <div data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="relative flex h-2 w-2">
@@ -63,7 +63,7 @@ export default function LiveTelemetryDashboard({
                 const categoryName = categoryObj ? stripHtml(categoryObj.name) : "Intelligence";
                 const colors = ["text-primary", "text-secondary", "text-error", "text-primary", "text-tertiary"];
                 return (
-                  <Link href={`/article/${post.slug}`} key={post.id} className="block">
+                  <Link href={`/article/${post.slug}`} key={post.id} data-reveal style={{ "--i": index } as React.CSSProperties} className="block">
                     <IntelligenceFeedItem
                       category={categoryName}
                       categoryColorClass={colors[index % colors.length]}
@@ -90,7 +90,7 @@ export default function LiveTelemetryDashboard({
           <div className="lg:col-span-5 flex flex-col gap-5">
 
             {/* Active theatres count */}
-            <div className="rounded-3xl bg-surface-container-lowest p-7 shadow-sm">
+            <div data-reveal className="rounded-3xl bg-surface-container-lowest p-7 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="font-headline-sm text-headline-sm text-on-surface">Research Desks</span>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">ANALYSES PUBLISHED</span>
@@ -114,7 +114,7 @@ export default function LiveTelemetryDashboard({
             </div>
 
             {/* Browse categories CTA */}
-            <div className="rounded-3xl bg-primary p-7 shadow-sm flex flex-col gap-3">
+            <div data-reveal style={{ "--i": 1 } as React.CSSProperties} className="rounded-3xl bg-primary p-7 shadow-sm flex flex-col gap-3">
               <span className="font-label-caps text-label-caps text-on-primary/70 uppercase">BROWSE BY REGION</span>
               <h3 className="font-headline-sm text-on-primary leading-snug">
                 Explore all {desks.length} research desks

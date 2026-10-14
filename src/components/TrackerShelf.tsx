@@ -20,7 +20,7 @@ export default function TrackerShelf({ trackers }: { trackers: (Tracker & { shor
   return (
     <section className="w-full bg-background py-16 lg:py-24" id="trackers">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8">
+        <div data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
@@ -40,7 +40,7 @@ export default function TrackerShelf({ trackers }: { trackers: (Tracker & { shor
         </div>
 
         {/* Uniform tabs, one per tracker */}
-        <div role="tablist" aria-label="Trackers" className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div data-reveal style={{ "--i": 1 } as React.CSSProperties} role="tablist" aria-label="Trackers" className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
           {trackers.map((t) => {
             const selected = t.slug === current.slug;
             return (

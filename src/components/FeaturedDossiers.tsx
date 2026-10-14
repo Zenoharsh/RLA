@@ -33,7 +33,7 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Section header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-12">
+        <div data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-12">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary" />
@@ -55,7 +55,7 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
         </div>
 
         {/* Lead card — spans full width */}
-        <div className="mb-8">
+        <div data-reveal className="mb-8">
           <Link href={`/article/${lead.slug}`} className="block group">
             <article className="relative rounded-3xl bg-surface-container-lowest shadow-[0_4px_24px_-4px_rgba(27,42,50,0.07)] hover:shadow-[0_16px_40px_-8px_rgba(27,42,50,0.13)] transition-all duration-300 overflow-hidden flex flex-col md:flex-row md:min-h-[280px]">
               {/* Left accent bar */}
@@ -109,7 +109,13 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
           {rest.slice(0, 5).map((post, i) => {
             const meta = getCardMeta(post, i + 1);
             return (
-              <Link href={`/article/${post.slug}`} key={post.id} className="block group h-full">
+              <Link
+                href={`/article/${post.slug}`}
+                key={post.id}
+                data-reveal
+                style={{ "--i": i } as React.CSSProperties}
+                className="block group h-full"
+              >
                 <DossierCard
                   category={meta.categoryName}
                   date={formatDate(post.date)}

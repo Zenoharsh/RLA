@@ -25,8 +25,8 @@ export default async function LatestVideos({ limit = 4, title = "Latest Videos" 
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {videos.map(video => (
-            <a href={video.link} target="_blank" rel="noopener noreferrer" key={video.id} className="group relative bg-surface-container-lowest rounded-[20px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-500 border border-outline/10 flex flex-col h-full">
+          {videos.map((video, i) => (
+            <a href={video.link} target="_blank" rel="noopener noreferrer" key={video.id} data-reveal style={{ "--i": i % 4 } as React.CSSProperties} className="group relative bg-surface-container-lowest rounded-[20px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-500 border border-outline/10 flex flex-col h-full">
               <div className="aspect-video bg-surface-container flex items-center justify-center relative overflow-hidden shrink-0">
                 <Image 
                   src={video.thumbnail} 

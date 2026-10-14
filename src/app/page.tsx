@@ -85,7 +85,7 @@ export default async function Home() {
         {/* SECTION 8: ENROLLMENT */}
         <section className="w-full bg-surface-container-low py-16 lg:py-24" id="dispatch-form">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl bg-surface-container-lowest p-8 sm:p-12 lg:p-16 shadow-[0_16px_40px_-12px_rgba(27,42,50,0.06)]">
+            <div data-reveal className="rounded-3xl bg-surface-container-lowest p-8 sm:p-12 lg:p-16 shadow-[0_16px_40px_-12px_rgba(27,42,50,0.06)]">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div className="lg:col-span-7 space-y-4">
                   <div className="inline-flex items-center gap-2 rounded-full bg-primary-container/10 px-3.5 py-1 text-primary">

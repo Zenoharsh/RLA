@@ -32,7 +32,7 @@ export default function DossierCard({
 }: DossierCardProps) {
   return (
     <article
-      className={`${colSpanClass} flex flex-col rounded-3xl bg-surface-container-lowest shadow-[0_2px_16px_rgba(27,42,50,0.06)] hover:shadow-[0_12px_40px_rgba(27,42,50,0.12)] transition-all duration-300 group overflow-hidden`}
+      className={`${colSpanClass} flex flex-col rounded-3xl bg-surface-container-lowest shadow-[0_2px_16px_rgba(27,42,50,0.06)] hover:shadow-[0_12px_40px_rgba(27,42,50,0.12)] hover:-translate-y-1 transition-all duration-500 group overflow-hidden`}
     >
       {/* Thumbnail — only shown if a featured image URL exists */}
       {featuredImage && (

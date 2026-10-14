@@ -235,8 +235,10 @@ function TrackerView({ tracker }: { tracker: Tracker }) {
         <section>
           <h2 className="m3-headline-sm text-on-surface mb-6">Previous issues</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-            {archive.map((issue) => (
-              <TrackerIssueCard key={issue.pdf} issue={issue} trackerTitle={tracker.title} />
+            {archive.map((issue, i) => (
+              <div key={issue.pdf} data-reveal style={{ "--i": i % 5 } as React.CSSProperties}>
+                <TrackerIssueCard issue={issue} trackerTitle={tracker.title} />
+              </div>
             ))}
           </div>
         </section>
