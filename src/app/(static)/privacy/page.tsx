@@ -2,6 +2,10 @@ import { fetchPageBySlug } from "@/lib/api";
 import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 
+// Render per request instead of at build time: WordPress is too slow to prerender within the
+// build's 60s limit. WP responses are still cached (each fetch sets its own revalidate).
+export const revalidate = 0;
+
 export default async function PrivacyPage() {
   const page = await fetchPageBySlug("privacy-policy");
 

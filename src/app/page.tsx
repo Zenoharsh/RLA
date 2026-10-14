@@ -10,6 +10,10 @@ import Footer from "@/components/Footer";
 import { fetchCategories, fetchPostsByCategory, fetchPostsPage, fetchTracker, formatDate, stripHtml } from "@/lib/api";
 import { TRACKERS } from "@/lib/site";
 
+// Render per request instead of at build time: WordPress is too slow to prerender within the
+// build's 60s limit. WP responses are still cached (each fetch sets its own revalidate).
+export const revalidate = 0;
+
 // Short-form output goes to the feed; everything else is a long-form dossier.
 const SHORT_FORM = ["statements", "commentaries", "media-coverage", "opinions"];
 const EMPTY = { posts: [], total: 0, totalPages: 0 };
