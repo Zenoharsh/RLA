@@ -2,9 +2,8 @@ import { fetchPageBySlug } from "@/lib/api";
 import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 
-// Render per request instead of at build time: WordPress is too slow to prerender within the
-// build's 60s limit. WP responses are still cached (each fetch sets its own revalidate).
-export const revalidate = 0;
+// Static page regenerated in the background (ISR); a failed refresh keeps the last good version.
+export const revalidate = 3600;
 
 export default async function TermsPage() {
   const page = await fetchPageBySlug("terms-and-conditions") || await fetchPageBySlug("terms");

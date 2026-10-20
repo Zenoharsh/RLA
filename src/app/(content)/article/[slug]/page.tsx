@@ -5,6 +5,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
+// Cached and regenerated in the background; a failed refresh keeps the last good version.
+export const revalidate = 3600;
+
+// No paths at build time: each one is rendered on its first visit, then cached (ISR).
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function SingleArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
   const post = await fetchPostBySlug(resolvedParams.slug);

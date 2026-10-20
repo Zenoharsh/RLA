@@ -52,22 +52,36 @@ export interface PostsPage {
   totalPages: number;
 }
 
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+
 /**
- * Fetch from the WP REST API, retrying once. Throws on failure on purpose: during ISR a thrown
- * error keeps the last good page online, whereas returning [] would cache an empty page / 404.
- * Callers that can live without the data should `.catch()` with a fallback.
+ * Fetch from the WP REST API with a timeout, retrying once at runtime.
+ *
+ * At runtime it throws on failure on purpose: during ISR a thrown error keeps the last good
+ * page online, whereas returning [] would replace it with an empty page / 404. Callers that can
+ * live without the data should `.catch()` with a fallback.
+ *
+ * During `next build` it never throws: WordPress is often too slow for the build's time limit,
+ * so pages are generated with empty data and fill in on their first background revalidation.
  */
 async function wpFetch(path: string, init: RequestInit & { next?: { revalidate?: number } }): Promise<Response> {
   let lastError: unknown;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < (IS_BUILD ? 1 : 2); attempt++) {
     try {
-      const res = await fetch(`${API_URL}${path}`, init);
+      const res = await fetch(`${API_URL}${path}`, {
+        ...init,
+        signal: AbortSignal.timeout(IS_BUILD ? 20_000 : 40_000),
+      });
       if (res.ok) return res;
       lastError = new Error(`WP ${path} responded ${res.status}`);
       if (res.status < 500) break; // 4xx won't improve on retry
     } catch (error) {
       lastError = error;
     }
+  }
+  if (IS_BUILD) {
+    console.warn(`WordPress unavailable during build (${path}); using empty data`, lastError);
+    return new Response("[]", { headers: { "content-type": "application/json", "x-wp-total": "0", "x-wp-totalpages": "0" } });
   }
   throw lastError;
 }

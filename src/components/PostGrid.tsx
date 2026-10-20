@@ -62,7 +62,7 @@ export default function PostGrid({
         <nav className="mt-14 flex items-center justify-center gap-3" aria-label="Pagination">
           {page > 1 && (
             <Link
-              href={page === 2 ? basePath : `${basePath}?page=${page - 1}`}
+              href={page === 2 ? basePath : `${basePath}/page/${page - 1}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-outline/30 px-5 py-2 m3-label-lg text-on-surface-variant hover:border-primary hover:text-primary transition-all"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -74,7 +74,7 @@ export default function PostGrid({
           </span>
           {page < totalPages && (
             <Link
-              href={`${basePath}?page=${page + 1}`}
+              href={`${basePath}/page/${page + 1}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-outline/30 px-5 py-2 m3-label-lg text-on-surface-variant hover:border-primary hover:text-primary transition-all"
             >
               Older
