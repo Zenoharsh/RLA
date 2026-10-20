@@ -4,62 +4,62 @@ const TEAM = [
   {
     name: "Dr. Ayanjit Sen",
     title: "Chief Advisor",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/31.png"
+    img: "/wp-content/uploads/2025/08/31.png"
   },
   {
     name: "Dr. Siddhartha Ghosh",
     title: "Director",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/32.png"
+    img: "/wp-content/uploads/2025/08/32.png"
   },
   {
     name: "Ujjual Abhishek Jha",
     title: "Strategic Advisor and Chief Geopolitical Analyst",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/02/uu-removebg-preview-1.png"
+    img: "/wp-content/uploads/2026/02/uu-removebg-preview-1.png"
   },
   {
     name: "Dr. Abhishek Ranjan",
     title: "Director",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/30.png"
+    img: "/wp-content/uploads/2025/08/30.png"
   },
   {
     name: "Vanchinathan Y",
     title: "Head (Network & Outreach)",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/28.png"
+    img: "/wp-content/uploads/2025/08/28.png"
   },
   {
     name: "Daney Antonio Martin",
     title: "Senior Research Associate",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/29.png"
+    img: "/wp-content/uploads/2025/08/29.png"
   },
   {
     name: "Archa K G",
     title: "Research Assistant",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/27.png"
+    img: "/wp-content/uploads/2025/08/27.png"
   },
   {
     name: "Poulina Banerjee",
     title: "Research Assistant",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/26.png"
+    img: "/wp-content/uploads/2025/08/26.png"
   },
   {
     name: "Mishti Sinha",
     title: "Research Assistant",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/25.png"
+    img: "/wp-content/uploads/2025/08/25.png"
   },
   {
     name: "Manjyot Kaur",
     title: "Research Assistant",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/24.png"
+    img: "/wp-content/uploads/2025/08/24.png"
   },
   {
     name: "Nripan Babu",
     title: "Research Assistant",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/23.png"
+    img: "/wp-content/uploads/2025/08/23.png"
   },
   {
     name: "Shashank Gupta",
     title: "Operations Manager",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2025/08/22.png"
+    img: "/wp-content/uploads/2025/08/22.png"
   }
 ];
 

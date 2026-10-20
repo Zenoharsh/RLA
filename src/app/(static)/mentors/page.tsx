@@ -4,77 +4,77 @@ const MENTORS = [
   {
     name: "Sujeet Kumar",
     title: "Member of Parliament Rajya Sabha (Odisha)",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Picture1_180x180.jpg"
+    img: "/wp-content/uploads/2026/08/Picture1_180x180.jpg"
   },
   {
     name: "Shri. Ninong Ering",
     title: "Member of Legislative Assembly, Arunachal Pradesh",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/ninong-1.png"
+    img: "/wp-content/uploads/2026/08/ninong-1.png"
   },
   {
     name: "Aric Chen",
     title: "Senior Editor, Anchor, and Producer, Epoch Times",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Aric-Chen-2.jpg"
+    img: "/wp-content/uploads/2026/08/Aric-Chen-2.jpg"
   },
   {
     name: "Maj. General (Retd) Ashok Kumar",
     title: "Kargil War Veteran & Director General, CENJOWS",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Maj.-General-Retd-Ashok-Kumar_171x171.jpg"
+    img: "/wp-content/uploads/2026/08/Maj.-General-Retd-Ashok-Kumar_171x171.jpg"
   },
   {
     name: "Lieutenant General Vinod G. Khandare",
     title: "PVSM, AVSM, SM, Former Principal Advisor, Ministry of Defence",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Lt.-Gen.-Vinod-G.-Khandare_155x155.jpg"
+    img: "/wp-content/uploads/2026/08/Lt.-Gen.-Vinod-G.-Khandare_155x155.jpg"
   },
   {
     name: "Vahram Ayvazyan",
     title: "Founder of Network State",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Vahram-Ayvazyan_153x153.jpg"
+    img: "/wp-content/uploads/2026/08/Vahram-Ayvazyan_153x153.jpg"
   },
   {
     name: "Paul Antonopoulos",
     title: "Bureau Chief, Greek City Times",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Paul-Antonopoulos_155x155.jpg"
+    img: "/wp-content/uploads/2026/08/Paul-Antonopoulos_155x155.jpg"
   },
   {
     name: "Anush Ghavalyan",
     title: "Stepanakert-based journalist. Host of Artsakh TV's Today's Topic Program",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Anush-Ghavalyan.jpg"
+    img: "/wp-content/uploads/2026/08/Anush-Ghavalyan.jpg"
   },
   {
     name: "Mr. Jevlan Shirmemmet",
     title: "Uyghur Activist, Chinese living in exile in Turkey",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Jevlan-Shirmemmet_160x160.jpg"
+    img: "/wp-content/uploads/2026/08/Jevlan-Shirmemmet_160x160.jpg"
   },
   {
     name: "Dr. Jagannath Panda",
     title: "Head, Stockholm Center for South Asian and Indo-Pacific Affairs",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Dr.-Jagannath-Panda-1.jpg"
+    img: "/wp-content/uploads/2026/08/Dr.-Jagannath-Panda-1.jpg"
   },
   {
     name: "Dr. Amar Patnaik",
     title: "Former Member of Parliament (Odisha)",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Picture11_186x186.jpg"
+    img: "/wp-content/uploads/2026/08/Picture11_186x186.jpg"
   },
   {
     name: "Dr. John Nomikos",
     title: "Director, RIEAS, Greece",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Dr.-John-Nomikos-2.jpg"
+    img: "/wp-content/uploads/2026/08/Dr.-John-Nomikos-2.jpg"
   },
   {
     name: "Air Commodore S P Singh",
     title: "Senior Fellow Centre for Aerospace Power & Strategic Studies",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Air-Commodore-S-P-Singh_328x328.jpg"
+    img: "/wp-content/uploads/2026/08/Air-Commodore-S-P-Singh_328x328.jpg"
   },
   {
     name: "Mr. Ilshat H. Kokbore",
     title: "Research Director Center for Uyghur Studies",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Mr.-Ilshat-H.-Kokbore_138x138.jpg"
+    img: "/wp-content/uploads/2026/08/Mr.-Ilshat-H.-Kokbore_138x138.jpg"
   },
   {
     name: "Mr. Massoud Hossaini",
     title: "Photojournalist, Agence France-Presse & Pulitzer Prize Winner, Human Rights Activist",
-    img: "https://redlanternanalytica.com/wp-content/uploads/2026/08/Mr.-Massoud-Hossaini.jpg"
+    img: "/wp-content/uploads/2026/08/Mr.-Massoud-Hossaini.jpg"
   }
 ];
 

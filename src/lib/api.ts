@@ -72,6 +72,23 @@ async function wpFetch(path: string, init: RequestInit & { next?: { revalidate?:
   throw lastError;
 }
 
+// Media lives on the WordPress host, which some visitors' networks can't reach. Point every
+// uploads URL at our own domain instead; next.config rewrites /wp-content/uploads/* to WordPress,
+// so browsers only ever talk to this site. Matches both plain and JSON-escaped (\/) forms.
+const MEDIA_ORIGIN = /https?:(\\?\/)\\?\/(?:www\.)?redlanternanalytica\.com\\?\/wp-content\\?\/uploads\\?\//g;
+
+/** Rewrite WordPress media URLs in any string (HTML, JSON text) to same-origin paths. */
+export function proxyMedia(text: string) {
+  return text.replace(MEDIA_ORIGIN, (_m, slash: string) =>
+    slash === "\\/" ? "\\/wp-content\\/uploads\\/" : "/wp-content/uploads/"
+  );
+}
+
+/** Parse a WP REST response with media URLs already pointed at this site. */
+async function wpJson<T>(res: Response): Promise<T> {
+  return JSON.parse(proxyMedia(await res.text())) as T;
+}
+
 /**
  * Paginated post query. `categories` / `exclude` are WP category IDs.
  */
@@ -91,7 +108,7 @@ export async function fetchPostsPage({
   if (exclude?.length) params.set("categories_exclude", exclude.join(","));
   const res = await wpFetch(`/posts?${params}`, { next: { revalidate: 1800 } });
   return {
-    posts: await res.json(),
+    posts: await wpJson<WPPost[]>(res),
     total: Number(res.headers.get("x-wp-total") ?? 0),
     totalPages: Number(res.headers.get("x-wp-totalpages") ?? 1),
   };
@@ -103,7 +120,7 @@ export async function fetchPosts(limit = 5): Promise<WPPost[]> {
 
 export async function fetchCategories(): Promise<WPCategory[]> {
   const res = await wpFetch(`/categories?per_page=100`, { next: { revalidate: 86400 } });
-  return res.json();
+  return wpJson<WPCategory[]>(res);
 }
 
 /**
@@ -129,14 +146,14 @@ export async function fetchPostsByCategory(slug: string, limit = 20): Promise<WP
 /** Returns null when no post has this slug; throws when WordPress can't be reached. */
 export async function fetchPostBySlug(slug: string): Promise<WPPost | null> {
   const res = await wpFetch(`/posts?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
-  const posts: WPPost[] = await res.json();
+  const posts = await wpJson<WPPost[]>(res);
   return posts[0] ?? null;
 }
 
 /** Returns null when no page has this slug; throws when WordPress can't be reached. */
 export async function fetchPageBySlug(slug: string): Promise<WPPost | null> {
   const res = await wpFetch(`/pages?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
-  const pages: WPPost[] = await res.json();
+  const pages = await wpJson<WPPost[]>(res);
   return pages[0] ?? null;
 }
 
@@ -145,7 +162,7 @@ export async function searchPosts(query: string, limit = 20): Promise<WPPost[]> 
     const res = await wpFetch(`/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed`, {
       cache: "no-store", // Search results shouldn't be cached aggressively
     });
-    return res.json();
+    return await wpJson<WPPost[]>(res);
   } catch (error) {
     console.error("Error searching posts:", error);
     return [];

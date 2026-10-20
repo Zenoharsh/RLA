@@ -46,7 +46,7 @@ export default function AboutPage() {
           <div className="relative h-[400px] lg:h-[500px] w-full rounded-3xl overflow-hidden shadow-xl ring-1 ring-outline/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://redlanternanalytica.com/wp-content/uploads/elementor/thumbs/us-rngirqu3z8cnmy1n0wx3br7sq2alsipkmv4qmvh3jg.jpg" 
+              src="/wp-content/uploads/elementor/thumbs/us-rngirqu3z8cnmy1n0wx3br7sq2alsipkmv4qmvh3jg.jpg" 
               alt="Hands stacked in unity"
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -58,7 +58,7 @@ export default function AboutPage() {
           <div className="order-2 lg:order-1 relative h-[400px] lg:h-[500px] w-full rounded-3xl overflow-hidden shadow-xl ring-1 ring-outline/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://redlanternanalytica.com/wp-content/uploads/2026/05/mi-1024x683.jpg" 
+              src="/wp-content/uploads/2026/05/mi-1024x683.jpg" 
               alt="Mission Analysis"
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -115,7 +115,7 @@ export default function AboutPage() {
           <div className="relative h-[400px] lg:h-[500px] w-full rounded-3xl overflow-hidden shadow-xl ring-1 ring-outline/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://redlanternanalytica.com/wp-content/uploads/elementor/thumbs/vi-rngi86szsbkw30ga7yliy6vjsgoon82ma2i26mgyzw.jpg" 
+              src="/wp-content/uploads/elementor/thumbs/vi-rngi86szsbkw30ga7yliy6vjsgoon82ma2i26mgyzw.jpg" 
               alt="Vision Forward"
               className="absolute inset-0 w-full h-full object-cover"
             />

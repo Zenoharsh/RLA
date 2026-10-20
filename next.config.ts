@@ -11,6 +11,25 @@ const nextConfig: NextConfig = {
       { source: "/submissions", destination: "/submission", permanent: true },
     ];
   },
+  // Serve WordPress media (images, PDFs) from this domain so visitors never need to reach the
+  // WordPress host directly. URLs are rewritten to these paths in src/lib/api.ts (proxyMedia).
+  async rewrites() {
+    return [
+      {
+        source: "/wp-content/uploads/:path*",
+        destination: "https://redlanternanalytica.com/wp-content/uploads/:path*",
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        // Uploads never change at the same URL, so let the CDN and browsers keep them.
+        source: "/wp-content/uploads/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400" }],
+      },
+    ];
+  },
   images: {
     // The WordPress origin is too slow for the image optimizer (requests time out and 404),
     // so images are served directly from their source.
