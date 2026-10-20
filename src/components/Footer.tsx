@@ -13,9 +13,9 @@ export default function Footer() {
           <div className="lg:col-span-4 flex flex-col gap-6">
             <Link href="/" className="inline-block w-56 hover:opacity-90 transition-opacity">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-full.png" alt="Red Lantern Analytica" className="w-full h-auto object-contain dark:hidden" />
+              <img src="/logo-full.png" alt="Red Lantern Analytica Foundation" className="w-full h-auto object-contain dark:hidden" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-full-light.png" alt="Red Lantern Analytica" className="w-full h-auto object-contain hidden dark:block" />
+              <img src="/logo-full-light.png" alt="Red Lantern Analytica Foundation" className="w-full h-auto object-contain hidden dark:block" />
             </Link>
             <p className="font-body-md text-on-surface-variant max-w-sm leading-relaxed">
               Independent diplomatic observatory, geopolitical intelligence synthesis, and technological conflict foresight for strategic councils.

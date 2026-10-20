@@ -44,7 +44,7 @@ export default function Navbar() {
             aria-label="Red Lantern Analytica home"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-full.png" alt="Red Lantern Analytica" className="h-8 lg:h-9 w-auto object-contain" />
+            <img src="/logo-full.png" alt="Red Lantern Analytica Foundation" className="h-8 lg:h-10 w-auto object-contain" />
           </Link>
           <nav className="hidden lg:flex items-center gap-5 xl:gap-6 text-on-surface-variant overhero:text-white/90">
             <Link
