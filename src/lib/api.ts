@@ -17,6 +17,7 @@ export interface WPPost {
     rendered: string;
   };
   author: number;
+  featured_media?: number;
   _embedded?: {
     author?: Array<{
       name: string;
@@ -122,15 +123,64 @@ export async function fetchPostsPage({
   categories?: number[];
   exclude?: number[];
 } = {}): Promise<PostsPage> {
-  const params = new URLSearchParams({ per_page: String(perPage), page: String(page), _embed: EMBED });
+  // Asking WP to _embed authors/terms/media into a list is very slow on this host, so lists are
+  // fetched lean and the embedded data is filled in from three small, cacheable lookups below.
+  const params = new URLSearchParams({ per_page: String(perPage), page: String(page), _fields: LIST_FIELDS });
   if (categories?.length) params.set("categories", categories.join(","));
   if (exclude?.length) params.set("categories_exclude", exclude.join(","));
   const res = await wpFetch(`/posts?${params}`, { next: { revalidate: 1800 } });
+  const posts = await wpJson<WPPost[]>(res);
   return {
-    posts: await wpJson<WPPost[]>(res),
+    posts: await attachEmbeds(posts),
     total: Number(res.headers.get("x-wp-total") ?? 0),
     totalPages: Number(res.headers.get("x-wp-totalpages") ?? 1),
   };
+}
+
+const LIST_FIELDS = "id,date,modified,slug,title,excerpt,categories,author,featured_media";
+
+/**
+ * Rebuild the `_embedded` shape the UI reads (author, wp:term, wp:featuredmedia) for lean
+ * post lists: category names from the cached category list, plus one request each for the
+ * featured images and author names of the whole list.
+ */
+async function attachEmbeds(posts: WPPost[]): Promise<WPPost[]> {
+  if (posts.length === 0) return posts;
+  const mediaIds = [...new Set(posts.map((p) => p.featured_media).filter((id): id is number => !!id))];
+  const authorIds = [...new Set(posts.map((p) => p.author).filter(Boolean))];
+
+  const [cats, media, authors] = await Promise.all([
+    fetchCategories(),
+    mediaIds.length
+      ? wpFetch(`/media?include=${mediaIds.join(",")}&per_page=${mediaIds.length}&_fields=id,source_url,alt_text`, {
+          next: { revalidate: 86400 },
+        }).then((r) => wpJson<{ id: number; source_url: string; alt_text?: string }[]>(r))
+      : Promise.resolve([]),
+    // Author names are cosmetic; some hosts hide /users, so fall back to the org name.
+    wpFetch(`/users?include=${authorIds.join(",")}&per_page=${authorIds.length}&_fields=id,name`, {
+      next: { revalidate: 86400 },
+    })
+      .then((r) => wpJson<{ id: number; name: string }[]>(r))
+      .catch(() => []),
+  ]);
+
+  return posts.map((p) => {
+    const terms = (p.categories ?? [])
+      .map((id) => cats.find((c) => c.id === id))
+      .filter((c): c is WPCategory => !!c)
+      .map((c) => ({ id: c.id, name: c.name, slug: c.slug, taxonomy: "category" }));
+    const image = media.find((m) => m.id === p.featured_media);
+    const author = authors.find((a) => a.id === p.author);
+    return {
+      ...p,
+      content: p.content ?? { rendered: "" },
+      _embedded: {
+        author: author ? [{ name: author.name }] : undefined,
+        "wp:term": [terms],
+        "wp:featuredmedia": image ? [{ source_url: image.source_url, alt_text: image.alt_text }] : undefined,
+      },
+    };
+  });
 }
 
 export async function fetchPosts(limit = 5): Promise<WPPost[]> {
