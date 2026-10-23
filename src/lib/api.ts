@@ -54,6 +54,11 @@ export interface PostsPage {
 
 const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
 
+// Only embed what the UI uses (full _embed also pulls replies etc. and is much slower on WP).
+const EMBED = "author,wp:term,wp:featuredmedia";
+// Pages are only used for their title and content.
+const PAGE_FIELDS = "id,slug,title,content,date,modified";
+
 /**
  * Fetch from the WP REST API with a timeout, retrying once at runtime.
  *
@@ -70,7 +75,7 @@ async function wpFetch(path: string, init: RequestInit & { next?: { revalidate?:
     try {
       const res = await fetch(`${API_URL}${path}`, {
         ...init,
-        signal: AbortSignal.timeout(IS_BUILD ? 20_000 : 40_000),
+        signal: AbortSignal.timeout(IS_BUILD ? 50_000 : 55_000), // build: stay under the 60s per-page limit
       });
       if (res.ok) return res;
       lastError = new Error(`WP ${path} responded ${res.status}`);
@@ -117,7 +122,7 @@ export async function fetchPostsPage({
   categories?: number[];
   exclude?: number[];
 } = {}): Promise<PostsPage> {
-  const params = new URLSearchParams({ per_page: String(perPage), page: String(page), _embed: "1" });
+  const params = new URLSearchParams({ per_page: String(perPage), page: String(page), _embed: EMBED });
   if (categories?.length) params.set("categories", categories.join(","));
   if (exclude?.length) params.set("categories_exclude", exclude.join(","));
   const res = await wpFetch(`/posts?${params}`, { next: { revalidate: 1800 } });
@@ -159,21 +164,21 @@ export async function fetchPostsByCategory(slug: string, limit = 20): Promise<WP
 
 /** Returns null when no post has this slug; throws when WordPress can't be reached. */
 export async function fetchPostBySlug(slug: string): Promise<WPPost | null> {
-  const res = await wpFetch(`/posts?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
+  const res = await wpFetch(`/posts?slug=${encodeURIComponent(slug)}&_embed=${EMBED}`, { next: { revalidate: 3600 } });
   const posts = await wpJson<WPPost[]>(res);
   return posts[0] ?? null;
 }
 
 /** Returns null when no page has this slug; throws when WordPress can't be reached. */
 export async function fetchPageBySlug(slug: string): Promise<WPPost | null> {
-  const res = await wpFetch(`/pages?slug=${encodeURIComponent(slug)}&_embed`, { next: { revalidate: 3600 } });
+  const res = await wpFetch(`/pages?slug=${encodeURIComponent(slug)}&_fields=${PAGE_FIELDS}`, { next: { revalidate: 3600 } });
   const pages = await wpJson<WPPost[]>(res);
   return pages[0] ?? null;
 }
 
 export async function searchPosts(query: string, limit = 20): Promise<WPPost[]> {
   try {
-    const res = await wpFetch(`/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed`, {
+    const res = await wpFetch(`/posts?search=${encodeURIComponent(query)}&per_page=${limit}&_embed=${EMBED}`, {
       cache: "no-store", // Search results shouldn't be cached aggressively
     });
     return await wpJson<WPPost[]>(res);
@@ -380,4 +385,24 @@ export async function fetchYouTubeVideos(channelId: string, limit = 4): Promise<
     console.error("Error fetching YT videos:", err);
     return [];
   }
+}
+
+/**
+ * Fetch several digest pages in a single request (WP accepts a comma-separated slug list),
+ * returned in the order given. Pages that are missing or have no issues are left out.
+ */
+export async function fetchTrackers(slugs: string[]): Promise<Tracker[]> {
+  const res = await wpFetch(
+    `/pages?slug=${slugs.map(encodeURIComponent).join(",")}&per_page=${slugs.length}&_fields=${PAGE_FIELDS}`,
+    { next: { revalidate: 3600 } }
+  );
+  const pages = await wpJson<WPPost[]>(res);
+  return slugs.flatMap((slug) => {
+    const page = pages.find((p) => p.slug === slug);
+    if (!page) return [];
+    const parsed = parseTrackerHtml(page.content.rendered);
+    return parsed.issues.length
+      ? [{ slug, title: decodeEntities(page.title.rendered), modified: page.modified ?? page.date, ...parsed }]
+      : [];
+  });
 }

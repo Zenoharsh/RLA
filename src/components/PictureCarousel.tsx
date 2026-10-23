@@ -1,11 +1,9 @@
 import React from "react";
 import Image from "next/image";
-import { fetchPosts } from "@/lib/api";
+import { WPPost } from "@/lib/api";
 import Link from "next/link";
 
-export default async function PictureCarousel() {
-  const posts = await fetchPosts(15).catch(() => []);
-  
+export default function PictureCarousel({ posts }: { posts: WPPost[] }) {
   // Filter posts that actually have a featured image
   const galleryItems = posts
     .filter(post => post._embedded?.["wp:featuredmedia"]?.[0]?.source_url)

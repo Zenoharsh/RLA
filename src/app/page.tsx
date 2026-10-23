@@ -7,35 +7,37 @@ import MediaCoverage from "@/components/MediaCoverage";
 import LatestVideos from "@/components/LatestVideos";
 import EnrollmentForm from "@/components/EnrollmentForm";
 import Footer from "@/components/Footer";
-import { fetchCategories, fetchPostsByCategory, fetchPostsPage, fetchTracker, formatDate, stripHtml } from "@/lib/api";
+import { fetchCategories, fetchPostsPage, fetchTrackers, formatDate, stripHtml } from "@/lib/api";
 import { TRACKERS } from "@/lib/site";
 
 // Static page regenerated in the background (ISR). If WordPress fails during a refresh, the last
 // good version keeps being served, so visitors never wait on (or see errors from) WordPress.
 export const revalidate = 600;
+// WordPress can take 20s+ per request; refreshes run in the background, so give them room.
+export const maxDuration = 120;
 
 // Short-form output goes to the feed; everything else is a long-form dossier.
 const SHORT_FORM = ["statements", "commentaries", "media-coverage", "opinions"];
-const EMPTY = { posts: [], total: 0, totalPages: 0 };
 const STAT_LABELS: Record<string, string> = { "nuclear-issues": "Nuclear", radicalisation: "Radicalisation", "media-coverage": "Media" };
 
 export default async function Home() {
-  const categories = await fetchCategories();
-  const shortIds = categories.filter((c) => SHORT_FORM.includes(c.slug)).map((c) => c.id);
-
-  const [latest, dossiers, feed, mediaPosts, trackers] = await Promise.all([
-    fetchPostsPage({ perPage: 12 }),
-    // Secondary sections degrade gracefully if WordPress is slow
-    fetchPostsPage({ perPage: 6, exclude: shortIds }).catch(() => EMPTY),
-    fetchPostsPage({ perPage: 5, categories: shortIds }).catch(() => EMPTY),
-    fetchPostsByCategory("media-coverage", 6).catch(() => []),
-    Promise.all(
-      TRACKERS.map(async (t) => {
-        const tracker = await fetchTracker(t.slug).catch(() => null);
-        return tracker?.issues.length ? { ...tracker, short: t.short } : null;
-      })
-    ),
+  // Three requests in total, kept small because WordPress is slow. None of them is caught: if one
+  // fails, the refresh is abandoned and the last complete page stays online (each request is also
+  // cached on its own, so the next refresh only has to retry what failed).
+  const [categories, latest, trackerData] = await Promise.all([
+    fetchCategories(),
+    fetchPostsPage({ perPage: 30 }),
+    fetchTrackers(TRACKERS.map((t) => t.slug)),
   ]);
+
+  const inCategory = (ids: number[]) => (p: (typeof latest.posts)[number]) => p.categories?.some((c) => ids.includes(c));
+  const shortIds = categories.filter((c) => SHORT_FORM.includes(c.slug)).map((c) => c.id);
+  const mediaIds = categories.filter((c) => c.slug === "media-coverage").map((c) => c.id);
+
+  const feedPosts = latest.posts.filter(inCategory(shortIds)).slice(0, 5);
+  const dossierPosts = latest.posts.filter((p) => !inCategory(shortIds)(p)).slice(0, 6);
+  const mediaPosts = latest.posts.filter(inCategory(mediaIds)).slice(0, 6);
+  const trackers = trackerData.map((t) => ({ ...t, short: TRACKERS.find((x) => x.slug === t.slug)!.short }));
 
   // Hero tags: the desks that published most recently, so they change as new content is posted
   const tagMap = new Map<string, string>();
@@ -59,7 +61,6 @@ export default async function Home() {
     category: stripHtml(lead._embedded?.["wp:term"]?.[0]?.[0]?.name ?? ""),
   };
 
-  const liveTrackers = trackers.filter((t) => t !== null);
 
   return (
     <main className="w-full bg-background">
@@ -69,16 +70,16 @@ export default async function Home() {
         <HeroSection tags={heroTags} stats={heroStats} latest={heroLatest} />
 
         {/* SECTION 2: MONTHLY TRACKERS — the magazines come first */}
-        <TrackerShelf trackers={liveTrackers} />
+        <TrackerShelf trackers={trackers} />
 
         {/* SECTION 3: INTERACTIVE FILTER & DOSSIERS (long-form) */}
-        <DynamicDossierSection initialPosts={dossiers.posts.length ? dossiers.posts : latest.posts.slice(0, 6)} />
+        <DynamicDossierSection initialPosts={dossierPosts.length ? dossierPosts : latest.posts.slice(0, 6)} />
 
         {/* SECTION 4: LATEST FEED (short-form) */}
-        <LiveTelemetryDashboard posts={feed.posts} categories={categories} totalAnalyses={latest.total} />
+        <LiveTelemetryDashboard posts={feedPosts} categories={categories} totalAnalyses={latest.total} />
 
         {/* SECTION 5: PICTURE CAROUSEL (Replaces Quote Banner) */}
-        <PictureCarousel />
+        <PictureCarousel posts={latest.posts} />
 
         {/* SECTION 6: MEDIA COVERAGE */}
         <MediaCoverage posts={mediaPosts} />
