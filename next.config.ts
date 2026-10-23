@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { WP_ORIGIN } from "./src/lib/wp-origin";
 
 const nextConfig: NextConfig = {
   // Keep old WordPress URLs working
@@ -9,6 +10,13 @@ const nextConfig: NextConfig = {
       { source: "/prodcast", destination: "/podcast", permanent: true },
       { source: "/archives", destination: "/articles", permanent: true },
       { source: "/submissions", destination: "/submission", permanent: true },
+      // WordPress lives on its own host; keep admin logins, the API and feeds reachable from
+      // old links on the main domain. Temporary, in case WordPress moves again.
+      { source: "/wp-admin", destination: `${WP_ORIGIN}/wp-admin/`, permanent: false },
+      { source: "/wp-admin/:path*", destination: `${WP_ORIGIN}/wp-admin/:path*`, permanent: false },
+      { source: "/wp-login.php", destination: `${WP_ORIGIN}/wp-login.php`, permanent: false },
+      { source: "/wp-json/:path*", destination: `${WP_ORIGIN}/wp-json/:path*`, permanent: false },
+      { source: "/feed", destination: `${WP_ORIGIN}/feed/`, permanent: false },
     ];
   },
   // Serve WordPress media (images, PDFs) from this domain so visitors never need to reach the
@@ -17,7 +25,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/wp-content/uploads/:path*",
-        destination: "https://redlanternanalytica.com/wp-content/uploads/:path*",
+        destination: `${WP_ORIGIN}/wp-content/uploads/:path*`,
       },
     ];
   },
@@ -42,6 +50,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "redlanternanalytica.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cms.redlanternanalytica.com",
       },
       {
         protocol: "https",

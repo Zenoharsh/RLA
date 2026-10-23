@@ -1,5 +1,7 @@
+import { WP_ORIGIN } from "./wp-origin";
+
 // WP_API_URL lets local development point at a mirror/mock when the origin is unreachable.
-const API_URL = process.env.WP_API_URL || "https://redlanternanalytica.com/wp-json/wp/v2";
+const API_URL = process.env.WP_API_URL || `${WP_ORIGIN}/wp-json/wp/v2`;
 
 export interface WPPost {
   id: number;
@@ -95,7 +97,8 @@ async function wpFetch(path: string, init: RequestInit & { next?: { revalidate?:
 // Media lives on the WordPress host, which some visitors' networks can't reach. Point every
 // uploads URL at our own domain instead; next.config rewrites /wp-content/uploads/* to WordPress,
 // so browsers only ever talk to this site. Matches both plain and JSON-escaped (\/) forms.
-const MEDIA_ORIGIN = /https?:(\\?\/)\\?\/(?:www\.)?redlanternanalytica\.com\\?\/wp-content\\?\/uploads\\?\//g;
+// Covers the old host and the WordPress host (www. / cms.), since stored content mixes them.
+const MEDIA_ORIGIN = /https?:(\\?\/)\\?\/(?:(?:www|cms)\.)?redlanternanalytica\.com\\?\/wp-content\\?\/uploads\\?\//g;
 
 /** Rewrite WordPress media URLs in any string (HTML, JSON text) to same-origin paths. */
 export function proxyMedia(text: string) {
