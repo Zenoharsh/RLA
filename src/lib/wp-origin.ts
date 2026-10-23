@@ -5,4 +5,4 @@
  *
  * Used by both src/lib/api.ts and next.config.ts, so keep it free of runtime-only imports.
  */
-export const WP_ORIGIN = (process.env.WP_ORIGIN || "https://redlanternanalytica.com").replace(/\/$/, "");
+export const WP_ORIGIN = (process.env.WP_ORIGIN || "https://cms.redlanternanalytica.com").replace(/\/$/, "");
