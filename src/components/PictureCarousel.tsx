@@ -28,7 +28,7 @@ export default function PictureCarousel({ posts }: { posts: WPPost[] }) {
                 src={item.imageUrl} 
                 alt={item.title} 
                 fill
-                className="object-cover ken-burns"
+                className="object-cover ken-burns text-transparent"
                 sizes="(max-width: 768px) 300px, 400px"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>

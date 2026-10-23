@@ -91,12 +91,12 @@ export default function FeaturedDossiers({ posts, activeCategory = "all" }: { po
                 </div>
               </div>
               {leadMeta.featuredImage && (
-                <div className="relative w-full md:w-[42%] aspect-[16/9] md:aspect-auto overflow-hidden shrink-0 order-first md:order-last">
+                <div className="relative w-full md:w-[42%] aspect-[16/9] md:aspect-auto overflow-hidden shrink-0 order-first md:order-last bg-surface-container">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={leadMeta.featuredImage}
                     alt={stripHtml(lead.title.rendered)}
-                    className="ken-burns absolute inset-0 h-full w-full object-cover"
+                    className="ken-burns absolute inset-0 h-full w-full object-cover text-transparent"
                   />
                 </div>
               )}

@@ -31,7 +31,7 @@ export default function TrackerIssueCard({
             src={issue.cover}
             alt={`${trackerTitle} cover — ${issue.title}`}
             loading="lazy"
-            className="ken-burns absolute inset-0 h-full w-full object-cover"
+            className="ken-burns absolute inset-0 h-full w-full object-cover text-transparent"
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-on-surface-variant">

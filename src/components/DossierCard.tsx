@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { stripHtml as stripTags } from "@/lib/api";
 
 export interface DossierCardProps {
   category: string;
@@ -36,12 +37,14 @@ export default function DossierCard({
     >
       {/* Thumbnail — only shown if a featured image URL exists */}
       {featuredImage && (
-        <div className="relative w-full aspect-[16/9] overflow-hidden shrink-0">
+        <div className="relative w-full aspect-[16/9] overflow-hidden shrink-0 bg-surface-container">
           <Image
             src={featuredImage}
-            alt={title}
+            alt={stripTags(title)}
             fill
-            className="object-cover ken-burns"
+            // text-transparent: if the file is missing, the alt text stays for screen readers but
+            // isn't drawn over the card; the tile just shows its background.
+            className="object-cover ken-burns text-transparent"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             unoptimized
           />
