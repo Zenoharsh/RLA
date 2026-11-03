@@ -374,11 +374,79 @@ export function parseTrackerHtml(html: string): Omit<Tracker, "slug" | "title"> 
   return { description, issues };
 }
 
+/**
+ * Which uploaded PDFs belong to which digest, matched on the (inconsistently named) file name,
+ * e.g. "MEA-DIGEST-OCT.pdf", "Inside-the-Great-Firewall-RLAs-China-Digest-…", "eurpe-digest-sept".
+ */
+const DIGEST_FILES: Record<string, RegExp> = {
+  "indias-diplomatic-digest": /diplomatic-digest|mea-digest/,
+  "china-digest": /chin[ae]-digest/,
+  "indian-ocean-region-digest": /indian-ocean-region|(^|-)ior-/,
+  "tibet-brief": /tibet/,
+  "neighbourhood-digest": /neighbou?rhood-digest/,
+  "europe-digest": /eu\w*pe-digest/,
+  "africa-digest": /africa-digest/,
+  "america-digest": /americas?-digest/,
+  "tech-ai-digest": /tech-ai-digest/,
+};
+
+interface DigestUpload {
+  pdf: string;
+  cover?: string;
+}
+
+/**
+ * The most recent digest PDFs in the media library, with the cover WordPress renders from each
+ * PDF's first page. Lets a new issue appear by just uploading it, without editing the Elementor page.
+ */
+async function fetchDigestUploads(): Promise<DigestUpload[]> {
+  const res = await wpFetch(`/media?mime_type=application/pdf&search=digest&per_page=100&_fields=source_url,media_details`, {
+    next: { revalidate: 3600 },
+  });
+  const media = await wpJson<{ source_url: string; media_details?: { sizes?: Record<string, { source_url: string }> } }[]>(res);
+  return media.map((m) => ({
+    pdf: m.source_url,
+    cover: m.media_details?.sizes?.large?.source_url ?? m.media_details?.sizes?.full?.source_url,
+  }));
+}
+
+/** Sortable value for an issuePeriod() string ("1–15 August 2025" → 20250801); 0 if unknown. */
+function periodKey(period: string): number {
+  const m = period.match(/(?:(\d{1,2})–\d{1,2} )?([A-Za-z]+)(?: (20\d\d))?/);
+  const month = m ? MONTHS.indexOf(m[2].toLowerCase()) : -1;
+  if (!m || month === -1 || !m[3]) return 0;
+  return Number(m[3]) * 10000 + (month + 1) * 100 + Number(m[1] ?? 1);
+}
+
+/** Add uploaded issues the digest page doesn't link yet (by period), newest first. */
+function withUploads(slug: string, issues: TrackerIssue[], uploads: DigestUpload[]): TrackerIssue[] {
+  const match = DIGEST_FILES[slug];
+  if (!match) return issues;
+  const periods = new Set(issues.map((i) => i.period));
+  const extra: TrackerIssue[] = [];
+  for (const upload of uploads) {
+    const file = decodeURIComponent(upload.pdf.split("/").pop() ?? "").toLowerCase();
+    const period = issuePeriod(upload.pdf);
+    // Needs a recognisable month so it can be dated; re-uploads of a listed issue are skipped.
+    if (!match.test(file) || !periodKey(period) || periods.has(period)) continue;
+    periods.add(period);
+    extra.push({ pdf: upload.pdf, cover: upload.cover, period, title: period });
+  }
+  if (!extra.length) return issues;
+  return [...issues, ...extra].sort((a, b) => periodKey(b.period) - periodKey(a.period));
+}
+
 export async function fetchTracker(slug: string): Promise<Tracker | null> {
-  const page = await fetchPageBySlug(slug);
+  const [page, uploads] = await Promise.all([fetchPageBySlug(slug), fetchDigestUploads()]);
   if (!page) return null;
   const parsed = parseTrackerHtml(page.content.rendered);
-  return { slug, title: decodeEntities(page.title.rendered), modified: page.modified ?? page.date, ...parsed };
+  return {
+    slug,
+    title: decodeEntities(page.title.rendered),
+    modified: page.modified ?? page.date,
+    ...parsed,
+    issues: withUploads(slug, parsed.issues, uploads),
+  };
 }
 
 /**
@@ -445,17 +513,19 @@ export async function fetchYouTubeVideos(channelId: string, limit = 4): Promise<
  * returned in the order given. Pages that are missing or have no issues are left out.
  */
 export async function fetchTrackers(slugs: string[]): Promise<Tracker[]> {
-  const res = await wpFetch(
-    `/pages?slug=${slugs.map(encodeURIComponent).join(",")}&per_page=${slugs.length}&_fields=${PAGE_FIELDS}`,
-    { next: { revalidate: 3600 } }
-  );
-  const pages = await wpJson<WPPost[]>(res);
+  const [pages, uploads] = await Promise.all([
+    wpFetch(`/pages?slug=${slugs.map(encodeURIComponent).join(",")}&per_page=${slugs.length}&_fields=${PAGE_FIELDS}`, {
+      next: { revalidate: 3600 },
+    }).then((res) => wpJson<WPPost[]>(res)),
+    fetchDigestUploads(),
+  ]);
   return slugs.flatMap((slug) => {
     const page = pages.find((p) => p.slug === slug);
     if (!page) return [];
     const parsed = parseTrackerHtml(page.content.rendered);
-    return parsed.issues.length
-      ? [{ slug, title: decodeEntities(page.title.rendered), modified: page.modified ?? page.date, ...parsed }]
+    const issues = withUploads(slug, parsed.issues, uploads);
+    return issues.length
+      ? [{ slug, title: decodeEntities(page.title.rendered), modified: page.modified ?? page.date, ...parsed, issues }]
       : [];
   });
 }
