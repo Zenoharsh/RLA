@@ -9,18 +9,21 @@ import {
   fetchPageBySlug,
   fetchPostBySlug,
   fetchPostsPage,
+  fetchReportLibrary,
   fetchTracker,
   resolveCategory,
   PostsPage,
   Tracker,
+  TrackerIssue,
 } from "@/lib/api";
 import { COMING_SOON, POST_LISTINGS, TRACKERS } from "@/lib/site";
 
 const PER_PAGE = 24;
+const REPORTS = "reports";
 
 type Resolved =
   | { kind: "tracker"; tracker: Tracker }
-  | { kind: "listing"; title: string; eyebrow: string; total: number; result: PostsPage }
+  | { kind: "listing"; title: string; eyebrow: string; total: number; result: PostsPage; reports?: TrackerIssue[] }
   | { kind: "coming-soon"; title: string; blurb: string }
   | { kind: "page"; title: string; html: string };
 
@@ -30,7 +33,8 @@ type Resolved =
  * old WP post permalink (redirect) → plain WP page.
  */
 async function resolve(slug: string, page: number): Promise<Resolved | null> {
-  const tracker = await fetchTracker(slug);
+  // The WP reports page also links PDFs, but it's a library of reports, not a dated tracker.
+  const tracker = slug === REPORTS ? null : await fetchTracker(slug);
   if (tracker && tracker.issues.length > 0) return { kind: "tracker", tracker };
 
   const listing = POST_LISTINGS[slug];
@@ -40,8 +44,11 @@ async function resolve(slug: string, page: number): Promise<Resolved | null> {
       const resolved = await Promise.all(listing.categories.map(resolveCategory));
       ids = resolved.flatMap((r) => r?.ids ?? []);
     }
-    const result = await listingPage(page, ids);
-    return { kind: "listing", title: listing.title, eyebrow: listing.eyebrow, total: result.total, result };
+    const [result, reports] = await Promise.all([
+      listingPage(page, ids),
+      slug === REPORTS && page === 1 ? fetchReportLibrary() : undefined,
+    ]);
+    return { kind: "listing", title: listing.title, eyebrow: listing.eyebrow, total: result.total, result, reports };
   }
 
   const category = await resolveCategory(slug);
@@ -113,6 +120,24 @@ export default async function ContentView({ slug, page }: { slug: string; page: 
                 ? `${resolved.total} published ${resolved.total === 1 ? "analysis" : "analyses"}, newest first.`
                 : "No publications in this section yet."}
             </Header>
+            {resolved.reports && resolved.reports.length > 0 && (
+              <section className="mb-20">
+                <h2 className="m3-headline-sm text-on-surface mb-6">Report library</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {resolved.reports.map((report, i) => (
+                    <div key={report.pdf} data-reveal style={{ "--i": i % 4 } as React.CSSProperties}>
+                      <TrackerIssueCard issue={report} trackerTitle="RLA Report" />
+                      {report.period && (
+                        <p className="m3-label-sm uppercase tracking-widest text-on-surface-variant mt-1 px-1">{report.period}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            {resolved.reports && resolved.reports.length > 0 && resolved.result.posts.length > 0 && (
+              <h2 className="m3-headline-sm text-on-surface mb-6">Report briefings</h2>
+            )}
             {resolved.result.posts.length > 0 ? (
               <PostGrid
                 posts={resolved.result.posts}

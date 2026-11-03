@@ -388,26 +388,51 @@ const DIGEST_FILES: Record<string, RegExp> = {
   "africa-digest": /africa-digest/,
   "america-digest": /americas?-digest/,
   "tech-ai-digest": /tech-ai-digest/,
+  "west-asia-digest": /west-asia-digest/,
 };
 
-interface DigestUpload {
+interface Upload {
   pdf: string;
   cover?: string;
 }
 
+type MediaItem = { source_url: string; media_details?: { sizes?: Record<string, { source_url: string }> } };
+
+const mediaImage = (m: MediaItem) => m.media_details?.sizes?.large?.source_url ?? m.media_details?.sizes?.full?.source_url ?? m.source_url;
+
 /**
- * The most recent digest PDFs in the media library, with the cover WordPress renders from each
- * PDF's first page. Lets a new issue appear by just uploading it, without editing the Elementor page.
+ * File name reduced to what a PDF and its cover image share: covers are uploaded as
+ * "<pdf name>-images-0.jpg", and WordPress/compressors add "-1", "-scaled", "_2_11zon", "_compressed".
  */
-async function fetchDigestUploads(): Promise<DigestUpload[]> {
-  const res = await wpFetch(`/media?mime_type=application/pdf&search=digest&per_page=100&_fields=source_url,media_details`, {
-    next: { revalidate: 3600 },
-  });
-  const media = await wpJson<{ source_url: string; media_details?: { sizes?: Record<string, { source_url: string }> } }[]>(res);
-  return media.map((m) => ({
-    pdf: m.source_url,
-    cover: m.media_details?.sizes?.large?.source_url ?? m.media_details?.sizes?.full?.source_url,
-  }));
+function fileKey(url: string) {
+  return decodeURIComponent(url.split("/").pop() ?? "")
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/, "")
+    .split("-images-0")[0]
+    .replace(/_\d+_11zon|_compressed|-scaled/g, "")
+    .replace(/(-\d)+$|-+$/, "");
+}
+
+/**
+ * The most recently uploaded PDFs in the media library, each with its cover: the image uploaded
+ * alongside it when there is one, otherwise the preview WordPress renders from the first page.
+ * Lets a new digest issue or report appear by just uploading it, without editing an Elementor page.
+ */
+async function fetchUploads(): Promise<Upload[]> {
+  const [pdfs, images] = await Promise.all([
+    wpFetch(`/media?mime_type=application/pdf&per_page=100&_fields=source_url,media_details`, { next: { revalidate: 3600 } }).then(
+      (res) => wpJson<MediaItem[]>(res)
+    ),
+    wpFetch(`/media?media_type=image&search=images-0&per_page=100&_fields=source_url,media_details`, {
+      next: { revalidate: 3600 },
+    }).then((res) => wpJson<MediaItem[]>(res)),
+  ]);
+  const covers = new Map<string, string>();
+  for (const image of images) {
+    const key = fileKey(image.source_url);
+    if (!covers.has(key)) covers.set(key, mediaImage(image)); // newest first
+  }
+  return pdfs.map((m) => ({ pdf: m.source_url, cover: covers.get(fileKey(m.source_url)) ?? mediaImage(m) }));
 }
 
 /** Sortable value for an issuePeriod() string ("1–15 August 2025" → 20250801); 0 if unknown. */
@@ -419,7 +444,7 @@ function periodKey(period: string): number {
 }
 
 /** Add uploaded issues the digest page doesn't link yet (by period), newest first. */
-function withUploads(slug: string, issues: TrackerIssue[], uploads: DigestUpload[]): TrackerIssue[] {
+function withUploads(slug: string, issues: TrackerIssue[], uploads: Upload[]): TrackerIssue[] {
   const match = DIGEST_FILES[slug];
   if (!match) return issues;
   const periods = new Set(issues.map((i) => i.period));
@@ -436,8 +461,59 @@ function withUploads(slug: string, issues: TrackerIssue[], uploads: DigestUpload
   return [...issues, ...extra].sort((a, b) => periodKey(b.period) - periodKey(a.period));
 }
 
+const SMALL_WORDS = new Set(["a", "an", "and", "as", "at", "by", "for", "from", "in", "of", "on", "or", "the", "to", "under", "vs", "with"]);
+const ACRONYMS = new Set(["ai", "aagc", "imec", "ior", "mea", "nscm", "opec", "prc", "rla", "uae", "us"]);
+
+/** Readable title from a report's file name ("THE-PRCS-RECENT-NAVAL-DRILLS-BY-TEAM-RLA.pdf" → "The PRC's Recent Naval Drills"). */
+function reportTitle(pdf: string): string {
+  const stem = decodeURIComponent(pdf.split("/").pop() ?? "")
+    .replace(/\.pdf$/i, "")
+    .replace(/_\d+_11zon|_compressed|_revised|_\d{8}_\d{6}_\d{4}/gi, "")
+    .replace(/(-\d)+$|-+$/, "")
+    .replace(/[-_](rla-report|report-by-(the-)?team-rla|(report-)?by-(the-)?(team-rla|rla|red-lantern-analytica))$/i, "");
+  const shouting = stem === stem.toUpperCase();
+  return stem
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((word, i) => {
+      const lower = word.toLowerCase();
+      if (ACRONYMS.has(lower)) return lower.toUpperCase();
+      if (/^(prc|imec|rla)s$/.test(lower)) return `${lower.slice(0, -1).toUpperCase()}’s`;
+      if (/^(india|china|myanmar)s$/.test(lower)) return `${lower[0].toUpperCase()}${lower.slice(1, -1)}’s`;
+      if (i > 0 && SMALL_WORDS.has(lower)) return lower;
+      const w = shouting ? lower : word;
+      return w[0].toUpperCase() + w.slice(1);
+    })
+    .join(" ");
+}
+
+/** "uploads/2026/03/…" → 202603, for newest-first ordering; 0 if the path has no date. */
+const uploadMonth = (url: string) => Number(url.match(/uploads\/(20\d\d)\/(\d\d)\//)?.slice(1).join("") ?? 0);
+
+/**
+ * Report PDFs: the ones linked on the WordPress "reports" page plus any report uploaded to the
+ * media library since (any PDF that isn't a digest), newest first. Re-uploads are listed once.
+ */
+export async function fetchReportLibrary(): Promise<TrackerIssue[]> {
+  const [page, uploads] = await Promise.all([fetchPageBySlug("reports"), fetchUploads()]);
+  const listed = page ? parseTrackerHtml(page.content.rendered).issues : [];
+  const seen = new Set<string>();
+  const reports: TrackerIssue[] = [];
+  for (const { pdf, cover } of [...listed, ...uploads]) {
+    const key = fileKey(pdf);
+    // Digests have their own pages; a name without letters ("1.pdf") can't be titled.
+    if (seen.has(key) || /digest|tibet-the-monthly|(^|-)ior-/.test(key) || !/[a-z]{3}/.test(key)) continue;
+    seen.add(key);
+    const month = uploadMonth(pdf);
+    const period = month ? `${MONTHS[(month % 100) - 1][0].toUpperCase()}${MONTHS[(month % 100) - 1].slice(1)} ${Math.floor(month / 100)}` : "";
+    // Short names ("bfr.pdf") say nothing; use a generic title rather than "Bfr".
+    reports.push({ pdf, cover, period, title: key.length < 6 ? "RLA Report" : reportTitle(pdf) });
+  }
+  return reports.sort((a, b) => uploadMonth(b.pdf) - uploadMonth(a.pdf));
+}
+
 export async function fetchTracker(slug: string): Promise<Tracker | null> {
-  const [page, uploads] = await Promise.all([fetchPageBySlug(slug), fetchDigestUploads()]);
+  const [page, uploads] = await Promise.all([fetchPageBySlug(slug), fetchUploads()]);
   if (!page) return null;
   const parsed = parseTrackerHtml(page.content.rendered);
   return {
@@ -517,7 +593,7 @@ export async function fetchTrackers(slugs: string[]): Promise<Tracker[]> {
     wpFetch(`/pages?slug=${slugs.map(encodeURIComponent).join(",")}&per_page=${slugs.length}&_fields=${PAGE_FIELDS}`, {
       next: { revalidate: 3600 },
     }).then((res) => wpJson<WPPost[]>(res)),
-    fetchDigestUploads(),
+    fetchUploads(),
   ]);
   return slugs.flatMap((slug) => {
     const page = pages.find((p) => p.slug === slug);
