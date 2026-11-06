@@ -24,7 +24,9 @@ export default async function SingleArticlePage({ params }: { params: Promise<{ 
   const authorObj = post._embedded?.author?.[0];
   const authorName = authorObj ? authorObj.name : "Red Lantern Analytica";
   const authorInitials = authorName.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
-  
+  // Designation comes from the first line of the author's "Biographical Info" in their WP profile.
+  const authorRole = stripHtml(authorObj?.description?.split(/\r?\n/)[0] ?? "") || "Red Lantern Analytica";
+
   const categoryObj = post._embedded?.['wp:term']?.[0]?.[0];
   const categoryName = categoryObj ? decodeEntities(categoryObj.name) : "Strategic Brief";
   const plainTitle = stripHtml(post.title.rendered);
@@ -96,7 +98,7 @@ export default async function SingleArticlePage({ params }: { params: Promise<{ 
                   </div>
                   <div>
                     <p className="font-body-md text-on-surface font-semibold">{authorName}</p>
-                    <p className="font-label-caps text-on-surface-variant uppercase">Directorate of Intelligence</p>
+                    <p className="font-label-caps text-on-surface-variant uppercase">{authorRole}</p>
                   </div>
                 </div>
                 
