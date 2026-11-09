@@ -2,7 +2,7 @@ import { searchPosts, stripHtml, formatDate } from "@/lib/api";
 
 import Footer from "@/components/Footer";
 import DossierCard from "@/components/DossierCard";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const resolvedParams = await searchParams;

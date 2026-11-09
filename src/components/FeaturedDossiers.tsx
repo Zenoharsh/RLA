@@ -1,6 +1,6 @@
 import DossierCard from "./DossierCard";
 import { WPPost, stripHtml, formatDate } from "@/lib/api";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 function getCardMeta(post: WPPost, index: number) {
   const categoryObj = post._embedded?.["wp:term"]?.[0]?.[0];

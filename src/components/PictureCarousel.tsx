@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { WPPost } from "@/lib/api";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 export default function PictureCarousel({ posts }: { posts: WPPost[] }) {
   // Filter posts that actually have a featured image

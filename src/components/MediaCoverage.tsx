@@ -1,5 +1,5 @@
 import { WPPost, stripHtml, formatDate } from "@/lib/api";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 interface Props {
   posts: WPPost[];

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useEffect } from "react";
 
 export default function Error({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {

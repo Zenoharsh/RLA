@@ -1,6 +1,6 @@
 import IntelligenceFeedItem from "./IntelligenceFeedItem";
 import { WPPost, WPCategory, stripHtml, formatDate } from "@/lib/api";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 const REGION_SLUGS = ["afghanistan", "asia", "china", "west-asia"];
 

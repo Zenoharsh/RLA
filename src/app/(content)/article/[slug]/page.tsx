@@ -2,7 +2,7 @@ import { decodeEntities, fetchPostBySlug, fetchPostsByCategory, formatDate, stri
 import Footer from "@/components/Footer";
 import DossierCard from "@/components/DossierCard";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Image from "next/image";
 
 // Cached and regenerated in the background; a failed refresh keeps the last good version.

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import Footer from "@/components/Footer";
 
 export const metadata = { title: "Careers | Red Lantern Analytica" };
